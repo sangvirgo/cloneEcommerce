@@ -1,5 +1,5 @@
 import './App.css'
-import HomePage from './components/HomeCarosel/HomePage'
+import HomePage from './components/HomePage'
 import Navigation from './components/Navigation'
 
 function App() {
