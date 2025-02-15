@@ -1,15 +1,16 @@
+import PropTypes from 'prop-types';
 import AliceCarousel from 'react-alice-carousel';
 import 'react-alice-carousel/lib/alice-carousel.css';
 import HomeSectionCard from '../HomeSectionCard/HomeSectionCard';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-const HomeSectionCarousel = () => {
+const HomeSectionCarousel = ({data, sectionName}) => {
     const responsive = {
         0: { items: 1 },
         720: { items: 3 },
         1024: { items: 5.5 },
     };
 
-    const items = [1, 1, 1, 1, 1, 1, 1, 1].map((item, index) => <HomeSectionCard key={index} />);
+    const items = data.slice(0, 10).map((item, index) => <HomeSectionCard key={index} product={item}/>);
 
     const renderPrevButton = ({ isDisabled }) => {
         return (
@@ -33,17 +34,26 @@ const HomeSectionCarousel = () => {
 
     return (
         <div className="relative px-4 sm:px-8 py-5 border border-black">
-            <AliceCarousel
-                mouseTracking
-                items={items}
-                responsive={responsive}
-                controlsStrategy="alternate"
-                renderPrevButton={renderPrevButton}
-                renderNextButton={renderNextButton}
-                disableDotsControls
-            />
+            <h2 className='text-2xl font-bold text-gray-700'>{sectionName}</h2>
+            <div>
+                <AliceCarousel
+                    mouseTracking
+                    items={items}
+                    responsive={responsive}
+                    controlsStrategy="alternate"
+                    renderPrevButton={renderPrevButton}
+                    renderNextButton={renderNextButton}
+                    disableDotsControls
+                />
+            </div>
         </div>
     );
 };
+
+
+HomeSectionCarousel.propTypes= {
+    sectionName: PropTypes.string.isRequired,
+    data: PropTypes.array.isRequired,
+}
 
 export default HomeSectionCarousel;
