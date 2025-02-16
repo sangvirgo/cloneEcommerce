@@ -95,7 +95,7 @@ const Footer = () => {
                 </div>
             </Grid>
 
-            <Grid className='pt-20 mt-[0.5px]' item xs={12} >
+            <Grid className='pt-5 mt-[0.5px]' item xs={12} >
                 <Typography variant="body2" component="p" align="center">
                     &copy; 2023 My Company. All rights reserved.
                 </Typography>
