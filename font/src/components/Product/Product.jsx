@@ -2,7 +2,8 @@
 import {mens_kurta} from '../Data/mens_kurta'
 import {filters} from '../Data/FilterData'
 import { singleFilter } from '../Data/FilterData'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import FilterListIcon from '@mui/icons-material/FilterList';
 import {
   Dialog,
   DialogBackdrop,
@@ -18,6 +19,7 @@ import {
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { ChevronDownIcon, FunnelIcon, MinusIcon, PlusIcon, Squares2X2Icon } from '@heroicons/react/20/solid'
 import ProductCard from './ProductCard'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 const sortOptions = [
   { name: 'Price: Low to High', href: '#', current: false },
@@ -31,12 +33,92 @@ function classNames(...classes) {
 export default function Product() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [selectedRadioValues, setSelectedRadioValues] = useState({})
+  const [selectedCheckboxes, setSelectedCheckboxes] = useState({})
+  const location = useLocation()
+  const navigate = useNavigate()
 
-  const handleRadioChange = (sectionId, value) => {
+  // Initialize selected filters from URL on component mount
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search)
+    
+    // Initialize radio values
+    const initialRadioValues = {}
+    singleFilter.forEach(section => {
+      const value = searchParams.get(section.id)
+      if (value) {
+        initialRadioValues[section.id] = value
+      }
+    })
+    setSelectedRadioValues(initialRadioValues)
+    
+    // Initialize checkbox values
+    const initialCheckboxes = {}
+    filters.forEach(section => {
+      const values = searchParams.get(section.id)
+      if (values) {
+        const selectedValues = values.split(',')
+        initialCheckboxes[section.id] = selectedValues
+      } else {
+        initialCheckboxes[section.id] = []
+      }
+    })
+    setSelectedCheckboxes(initialCheckboxes)
+  }, [location.search])
+
+  const handleFilter = (value, sectionId) => {
+    const searchParams = new URLSearchParams(location.search)
+    
+    // Get current values for this section
+    const filterValues = searchParams.get(sectionId)
+    let selectedValues = filterValues ? filterValues.split(',') : []
+    
+    if (selectedValues.includes(value)) {
+      // Remove the value if it already exists
+      selectedValues = selectedValues.filter(item => item !== value)
+    } else {
+      // Add the value if it doesn't exist
+      selectedValues.push(value)
+    }
+    
+    // Update the URL and state
+    if (selectedValues.length > 0) {
+      searchParams.set(sectionId, selectedValues.join(','))
+    } else {
+      searchParams.delete(sectionId)
+    }
+    
+    const query = searchParams.toString()
+    navigate({ search: query ? `?${query}` : '' })
+    
+    // Update local state for checkbox selections
+    setSelectedCheckboxes(prev => ({
+      ...prev,
+      [sectionId]: selectedValues
+    }))
+  }
+
+  const handleRadioFilterChange = (e, sectionId) => {
+    const searchParams = new URLSearchParams(location.search)
+    const value = e.target.value
+    
+    // Update the URL parameter
+    searchParams.set(sectionId, value)
+    const query = searchParams.toString()
+    navigate({ search: `?${query}` })
+    
+    // Update the selected radio value in state
     setSelectedRadioValues(prev => ({
       ...prev,
       [sectionId]: value
     }))
+  }
+
+  // Check if a checkbox should be checked based on URL parameters
+  const isCheckboxChecked = (sectionId, value) => {
+    if (selectedCheckboxes[sectionId]) {
+      return selectedCheckboxes[sectionId].includes(value)
+    }
+    return false
   }
 
   return (
@@ -68,7 +150,6 @@ export default function Product() {
 
               {/* Filters */}
               <form className="mt-4 border-t border-gray-200">
-
                 {filters.map((section) => (
                   <Disclosure key={section.id} as="div" className="border-t border-gray-200 px-4 py-6">
                     <h3 className="-mx-2 -my-3 flow-root">
@@ -87,7 +168,9 @@ export default function Product() {
                             <div className="flex h-5 shrink-0 items-center">
                               <div className="group grid size-4 grid-cols-1">
                                 <input
-                                  defaultValue={option.value}
+                                  onChange={() => handleFilter(option.value, section.id)}
+                                  checked={isCheckboxChecked(section.id, option.value)}
+                                  value={option.value}
                                   id={`filter-mobile-${section.id}-${optionIdx}`}
                                   name={`${section.id}[]`}
                                   type="checkbox"
@@ -193,7 +276,10 @@ export default function Product() {
             <div className="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-4">
               {/* Filters */}
                 <div>
-                  
+                <div className="flex justify-between items-center mb-4">
+                  <h1 className="text-2xl font-bold text-gray-700">Filter</h1>
+                  <FilterListIcon className="text-2xl text-gray-700 cursor-pointer opacity-60" />
+                </div>
                 <form className="hidden lg:block">
                 {filters.map((section) => (
                     <Disclosure key={section.id} as="div" className="border-b border-gray-200 py-6">
@@ -213,8 +299,9 @@ export default function Product() {
                               <div className="flex h-5 shrink-0 items-center">
                                 <div className="group grid size-4 grid-cols-1">
                                   <input
-                                    defaultValue={option.value}
-                                    defaultChecked={option.checked}
+                                    onChange={() => handleFilter(option.value, section.id)}
+                                    checked={isCheckboxChecked(section.id, option.value)}
+                                    value={option.value}
                                     id={`filter-${section.id}-${optionIdx}`}
                                     name={`${section.id}[]`}
                                     type="checkbox"
@@ -268,11 +355,12 @@ export default function Product() {
                           {section.options.map((option, optionIdx) => (
                             <div key={option.value} className="flex items-center">
                               <input
+                                onChange={(e) => handleRadioFilterChange(e, section.id)}
                                 id={`filter-radio-${section.id}-${optionIdx}`}
                                 name={`filter-radio-${section.id}`}
                                 type="radio"
+                                value={option.value}
                                 checked={selectedRadioValues[section.id] === option.value}
-                                onChange={() => handleRadioChange(section.id, option.value)}
                                 className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"
                               />
                               <label
