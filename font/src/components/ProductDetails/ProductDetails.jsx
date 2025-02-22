@@ -19,7 +19,7 @@
 
 import { useState } from 'react'
 import { Radio, RadioGroup } from '@headlessui/react'
-import { Rating } from '@mui/material'
+import { Rating, Button } from '@mui/material'
 
 const product = {
   name: 'Basic Tee 6-Pack',
@@ -53,14 +53,10 @@ const product = {
     { name: 'Black', class: 'bg-gray-900', selectedClass: 'ring-gray-900' },
   ],
   sizes: [
-    { name: 'XXS', inStock: false },
-    { name: 'XS', inStock: true },
     { name: 'S', inStock: true },
     { name: 'M', inStock: true },
     { name: 'L', inStock: true },
     { name: 'XL', inStock: true },
-    { name: '2XL', inStock: true },
-    { name: '3XL', inStock: true },
   ],
   description:
     'The Basic Tee 6-Pack allows you to fully express your vibrant personality with three grayscale options. Feeling adventurous? Put on a heather gray tee. Want to be a trendsetter? Try our exclusive colorway: "Black". Need to add an extra pop of color to your outfit? Our white tee has you covered.',
@@ -200,9 +196,7 @@ export default function ProductDetails() {
               <div className="mt-10">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-medium text-gray-900">Size</h3>
-                  <a href="#" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
-                    Size guide
-                  </a>
+
                 </div>
 
                 <fieldset aria-label="Choose a size" className="mt-4">
@@ -250,12 +244,9 @@ export default function ProductDetails() {
                 </fieldset>
               </div>
 
-              <button
-                type="submit"
-                className="mt-10 flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden"
-              >
-                Add to bag
-              </button>
+              <Button variant='contained' color='secondary' sx={{p:"2rem", py:"1rem",}} >
+                Add to cart
+              </Button>
             </form>
           </div>
 
