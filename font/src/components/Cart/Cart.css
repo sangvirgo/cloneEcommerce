@@ -1,0 +1,7 @@
+.border_custom {
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+.border_checkout {
+    box-shadow: rgba(0, 0, 0, 0.56) 0px 22px 70px 4px;
+}
