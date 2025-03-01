@@ -1,9 +1,11 @@
+import { useNavigate } from "react-router-dom";
 import "./ProductCard.css" 
 import PropTypes from 'prop-types';
 
 const ProductCard = ({product}) => {
+    const navigate=useNavigate()
   return (
-    <div>
+    <div onClick={()=>navigate(`/product/${5}`)}>
         <div className="product-card w-[15rem] m-3 transition-all cursor-pointer hover:shadow-lg">
             <div className="h-[20rem] ">
                 <img className="h-full w-full object-cover object-center" src={product.imageUrl} alt="Product" />
