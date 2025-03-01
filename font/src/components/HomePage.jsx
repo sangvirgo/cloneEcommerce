@@ -1,4 +1,4 @@
-import { mens_kurta } from "./Data/men_kurta"
+import { mens_kurta } from "./Data/mens_kurta"
 import MainCarousel from "./HomeCarousel/MainCarousel"
 import HomeSectionCarousel from "./HomeSectionCarousel/HomeSectionCarousel"
 

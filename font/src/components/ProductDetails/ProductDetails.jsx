@@ -23,6 +23,7 @@
   import ProductReviewCard from './ProductReviewCard'
   import {mens_kurta} from '../../components/Data/mens_kurta'
   import HomeSectionCard from '../HomeSectionCard/HomeSectionCard'
+import { useNavigate } from 'react-router-dom'
 
   const product = {
     name: 'Basic Tee 6-Pack',
@@ -114,6 +115,10 @@
   export default function ProductDetails() {
     const [selectedColor, setSelectedColor] = useState(product.colors[0])
     const [selectedSize, setSelectedSize] = useState(product.sizes[2])
+    const navigate=useNavigate()
+    const handleClickToCart = ()=> {
+      navigate('/cart')
+    }
 
     return (
       <div className="bg-white mb-[-38px]">
@@ -281,7 +286,7 @@
                 </div>
 
                 <div className='mt-3'>
-                  <Button variant='contained' sx={{p:"2rem", py:"1rem", bgcolor: "#ab00ff"}} >
+                  <Button onClick={handleClickToCart} variant='contained' sx={{p:"2rem", py:"1rem", bgcolor: "#ab00ff"}} >
                     Add to cart
                   </Button>
                 </div>

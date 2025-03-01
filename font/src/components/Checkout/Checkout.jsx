@@ -26,7 +26,7 @@ export default function Checkout() {
 
   // Cập nhật URL khi activeStep thay đổi
   React.useEffect(() => {
-    navigate(`/?step=${activeStep + 1}`, { replace: true });
+    navigate(`/checkout/?step=${activeStep + 1}`, { replace: true });
   }, [activeStep, navigate]);
 
   const handleNext = () => {

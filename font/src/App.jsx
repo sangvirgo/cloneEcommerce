@@ -1,8 +1,10 @@
+import { Route, Routes } from 'react-router-dom'
 import './App.css'
-import Footer from './components/Footer/Footer'
+// import Footer from './components/Footer/Footer'
 // import HomePage from './components/HomePage'
-import Navigation from './components/Navigation/Navigation'
-import OrderDetail from './components/Order/OrderDetail'
+// import Navigation from './components/Navigation/Navigation'
+// import OrderDetail from './components/Order/OrderDetail'
+import CustomerRouters from './Routers/CustomerRouters'
 // import Product from './components/Product/Product'
 // import ProductDetails from './components/ProductDetails/ProductDetails'
 // import Cart from './components/Cart/Cart'
@@ -12,19 +14,9 @@ import OrderDetail from './components/Order/OrderDetail'
 function App() {
   return (
     <div className="">
-      <Navigation />
-
-    <div>
-      {/* <HomePage /> */}
-      {/* <Product /> */}
-      {/* <ProductDetails /> */}
-      {/* <Cart /> */}
-      {/* <Checkout /> */}
-      {/* <Order /> */}
-      <OrderDetail />
-    </div>
-
-    <Footer />
+      <Routes>
+        <Route path="/*" element={<CustomerRouters/>} />
+      </Routes>
     </div>
 
   )

@@ -1,6 +1,4 @@
-'use client'
-
-import { Fragment, useState } from 'react'
+import { Fragment, useState } from 'react';
 import {
   Dialog,
   DialogBackdrop,
@@ -14,8 +12,15 @@ import {
   TabList,
   TabPanel,
   TabPanels,
-} from '@headlessui/react'
-import { Bars3Icon, MagnifyingGlassIcon, ShoppingBagIcon, XMarkIcon } from '@heroicons/react/24/outline'
+} from '@headlessui/react';
+import {
+  Bars3Icon,
+  MagnifyingGlassIcon,
+  ShoppingBagIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@mui/material';
 
 const navigation = {
   categories: [
@@ -84,16 +89,14 @@ const navigation = {
         {
           name: 'New Arrivals',
           href: '#',
-          imageSrc:
-            'https://tailwindui.com/plus-assets/img/ecommerce-images/product-page-04-detail-product-shot-01.jpg',
+          imageSrc: 'https://tailwindui.com/plus-assets/img/ecommerce-images/product-page-04-detail-product-shot-01.jpg',
           imageAlt: 'Drawstring top with elastic loop closure and textured interior padding.',
         },
         {
           name: 'Artwork Tees',
           href: '#',
           imageSrc: 'https://tailwindui.com/plus-assets/img/ecommerce-images/category-page-02-image-card-06.jpg',
-          imageAlt:
-            'Three shirts in gray, white, and blue arranged on table with same line drawing of hands and shapes overlapping on front of shirt.',
+          imageAlt: 'Three shirts in gray, white, and blue arranged on table with same line drawing of hands and shapes overlapping on front of shirt.',
         },
       ],
       sections: [
@@ -139,15 +142,26 @@ const navigation = {
     { name: 'Company', href: '#' },
     { name: 'Stores', href: '#' },
   ],
-}
+};
 
 export default function Navigation() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  // Hàm xử lý điều hướng khi nhấp vào các mục chính (Women, Men, Company, Stores)
+  const handleNavigationClick = (path) => {
+    navigate(`/${path.toLowerCase()}`);
+    setMobileMenuOpen(false); // Đóng menu mobile nếu đang mở
+  };
 
   return (
     <div className="bg-white">
       {/* Mobile menu */}
-      <Dialog open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} className="relative z-40 lg:hidden">
+      <Dialog
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        className="relative z-40 lg:hidden"
+      >
         <DialogBackdrop
           transition
           className="fixed inset-0 bg-black/25 transition-opacity duration-300 ease-linear data-closed:opacity-0"
@@ -207,7 +221,10 @@ export default function Navigation() {
                     </div>
                     {category.sections.map((section) => (
                       <div key={section.name}>
-                        <p id={`${category.id}-${section.id}-heading-mobile`} className="font-medium text-gray-900">
+                        <p
+                          id={`${category.id}-${section.id}-heading-mobile`}
+                          className="font-medium text-gray-900"
+                        >
                           {section.name}
                         </p>
                         <ul
@@ -217,7 +234,14 @@ export default function Navigation() {
                         >
                           {section.items.map((item) => (
                             <li key={item.name} className="flow-root">
-                              <a href={item.href} className="-m-2 block p-2 text-gray-500">
+                              <a
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleNavigationClick(`${category.id}/${section.id}/${item.name.toLowerCase()}`);
+                                }}
+                                className="-m-2 block p-2 text-gray-500"
+                              >
                                 {item.name}
                               </a>
                             </li>
@@ -233,7 +257,14 @@ export default function Navigation() {
             <div className="space-y-6 border-t border-gray-200 px-4 py-6">
               {navigation.pages.map((page) => (
                 <div key={page.name} className="flow-root">
-                  <a href={page.href} className="-m-2 block p-2 font-medium text-gray-900">
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleNavigationClick(page.name.toLowerCase());
+                    }}
+                    className="-m-2 block p-2 font-medium text-gray-900"
+                  >
                     {page.name}
                   </a>
                 </div>
@@ -288,7 +319,7 @@ export default function Navigation() {
 
               {/* Logo */}
               <div className="ml-4 flex lg:ml-0">
-                <a href="#">
+                <a href="/">
                   <span className="sr-only">Your Company</span>
                   <img
                     alt=""
@@ -320,7 +351,6 @@ export default function Navigation() {
                           </div>
 
                           <PopoverPanel className="absolute inset-x-0 top-full text-sm text-gray-500">
-                            {/* Presentational element used to render the bottom shadow, if we put the shadow on the actual panel it pokes out the top, so we use this shorter element to hide the top of the shadow */}
                             <div className="absolute inset-0 top-1/2 bg-white shadow" aria-hidden="true" />
 
                             <div className="relative bg-white">
@@ -359,7 +389,16 @@ export default function Navigation() {
                                         >
                                           {section.items.map((item) => (
                                             <li key={item.name} className="flex">
-                                              <a href={item.href} className="hover:text-gray-800">
+                                              <a
+                                                href="#"
+                                                onClick={(e) => {
+                                                  e.preventDefault();
+                                                  handleNavigationClick(
+                                                    `${category.id}/${section.id}/${item.name.toLowerCase()}`
+                                                  );
+                                                }}
+                                                className="hover:text-gray-800"
+                                              >
                                                 {item.name}
                                               </a>
                                             </li>
@@ -380,7 +419,11 @@ export default function Navigation() {
                   {navigation.pages.map((page) => (
                     <a
                       key={page.name}
-                      href={page.href}
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleNavigationClick(page.name.toLowerCase());
+                      }}
                       className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-800"
                     >
                       {page.name}
@@ -423,11 +466,14 @@ export default function Navigation() {
                 {/* Cart */}
                 <div className="ml-4 flow-root lg:ml-6">
                   <a href="#" className="group -m-2 flex items-center p-2">
+
+                    <Button onClick={()=>navigate("/account/order")} className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
                     <ShoppingBagIcon
                       aria-hidden="true"
                       className="size-6 shrink-0 text-gray-400 group-hover:text-gray-500"
                     />
-                    <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">2</span>
+                      <p className='ml-2'>0</p>
+                    </Button>
                     <span className="sr-only">items in cart, view bag</span>
                   </a>
                 </div>
@@ -437,5 +483,5 @@ export default function Navigation() {
         </nav>
       </header>
     </div>
-  )
-}
+  );
+} 
