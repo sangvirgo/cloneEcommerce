@@ -2,29 +2,40 @@ package com.ecommerce.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "payment_information")
 public class PaymentInformation {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payment_id")
     private Long paymentId;
 
+    @NotBlank
+    @Size(max = 100)
     @Column(name = "cardholder_name")
     private String cardHolderName;
 
+    @NotBlank
+    @Size(min = 16, max = 19)
     @Column(name = "card_number")
     private String cardNumber;
 
+    @NotBlank
+    @Size(min = 5, max = 5)
     @Column(name = "expiration_date")
     private String expirationDate;
 
+    @NotBlank
+    @Size(min = 3, max = 4)
     @Column(name = "cvv")
     private String cvv;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore
     private User user;
 

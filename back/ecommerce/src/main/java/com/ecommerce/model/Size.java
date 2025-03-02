@@ -1,8 +1,17 @@
 package com.ecommerce.model;
 
 
+import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+
+@Embeddable
 public class Size {
+    @NotBlank
+    @jakarta.validation.constraints.Size(max = 10)
     private String name;
+
+    @Min(0)
     private int quantity;
 
     public Size() {
