@@ -2,6 +2,8 @@ package com.ecommerce.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 import java.time.LocalDateTime;
 
@@ -22,8 +24,67 @@ public class Rating {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @Column(name = "rating")
+    @Min(0)
+    @Max(5)
+    @Column(name = "rating", nullable = false)
     private double rating;
 
-    private LocalDateTime createAt;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public Rating() {
+    }
+
+    public Rating(Long id, User user, Product product, double rating, LocalDateTime createdAt) {
+        this.id = id;
+        this.user = user;
+        this.product = product;
+        this.rating = rating;
+        this.createdAt = createdAt;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
+    public double getRating() {
+        return rating;
+    }
+
+    public void setRating(double rating) {
+        this.rating = rating;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreateAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }
