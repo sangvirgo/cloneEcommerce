@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,19 +20,18 @@ public class User {
     @Column(name = "user_id")
     private Long id;
 
-    @NotBlank
+    @NotBlank(message = "Password is required")
     @jakarta.validation.constraints.Size(max = 50)
     @Column(name = "first_name")
     private String firstName;
 
-    @NotBlank
+    @NotBlank(message = "Password is required")
     @jakarta.validation.constraints.Size(max = 50)
     @Column(name = "last_name")
     private String lastName;
 
-    @NotBlank
-    @jakarta.validation.constraints.Size(min = 8)
-    @JsonIgnore
+    @NotBlank(message = "Password is required")
+    @jakarta.validation.constraints.Size(min = 8, message = "Password must be at least 8 characters long")
     @Column(name = "password")
     private String password;
 
@@ -41,12 +41,11 @@ public class User {
     @Column(name = "email", unique = true)
     private String email;
 
-    @NotBlank
+
     @jakarta.validation.constraints.Size(max = 20)
     @Column(name = "role")
     private String role;
 
-    @NotBlank
     @jakarta.validation.constraints.Size(max = 15)
     @Column(name = "mobile")
     private String mobile;
