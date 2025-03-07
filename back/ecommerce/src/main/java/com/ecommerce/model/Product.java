@@ -7,9 +7,7 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "product")
@@ -50,14 +48,11 @@ public class Product {
     @Column(name = "brand")
     private String brand;
 
-    @Size(max = 20)
     @Column(name = "color")
     private String color;
 
-    @ElementCollection
-    @CollectionTable(name = "product_sizes", joinColumns = @JoinColumn(name = "product_id"))
-    @Column(name = "size")
-    private Set<String> sizes = new HashSet<>();
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductSize> sizes = new ArrayList<>();
 
     @Size(max = 255)
     @Column(name = "image_url")
@@ -177,6 +172,14 @@ public class Product {
 
     public void setColor(String color) {
         this.color = color;
+    }
+
+    public List<ProductSize> getSizes() {
+        return sizes;
+    }
+
+    public void setSizes(List<ProductSize> sizes) {
+        this.sizes = sizes;
     }
 
     public String getImageUrl() {
