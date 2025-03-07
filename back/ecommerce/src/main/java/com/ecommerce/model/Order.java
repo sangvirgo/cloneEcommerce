@@ -21,6 +21,9 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
 
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PaymentDetail> paymentDetails = new ArrayList<>();
+
     @Column(name = "order_date")
     private LocalDateTime orderDate;
 
@@ -61,6 +64,14 @@ public class Order {
 
     public void setOrderItems(List<OrderItem> orderItems) {
         this.orderItems = orderItems;
+    }
+
+    public List<PaymentDetail> getPaymentDetails() {
+        return paymentDetails;
+    }
+
+    public void setPaymentDetails(List<PaymentDetail> paymentDetails) {
+        this.paymentDetails = paymentDetails;
     }
 
     public LocalDateTime getOrderDate() {

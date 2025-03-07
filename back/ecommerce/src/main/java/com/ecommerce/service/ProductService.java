@@ -19,5 +19,6 @@ public interface ProductService {
     public List<Product> findProductsByCategory(String category) throws ProductException;
 
     public Page<Product> findAllProducts(String category, List<String> colors, List<String> sizes,
-                                         Integer minPrice, Integer maxPrice) throws ProductException;
+                                         Integer minPrice, Integer maxPrice, Integer minDiscount, String sort,
+                                         String stock, Integer pageNumber, Integer pageSize) throws ProductException;
 }

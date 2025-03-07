@@ -1,9 +1,9 @@
 package com.ecommerce.request;
 
-import com.ecommerce.model.Size;
+import com.ecommerce.model.ProductSize;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CreateProductRequest {
     private String title;
@@ -14,7 +14,7 @@ public class CreateProductRequest {
     private int quantity;
     private String brand;
     private String color;
-    private Set<Size> sizes=new HashSet<>();
+    private List<ProductSize> sizes = new ArrayList<>();
     private String imageUrl;
     private String topLevelCategory;
     private String secondLevelCategory;
@@ -23,7 +23,7 @@ public class CreateProductRequest {
     public CreateProductRequest() {
     }
 
-    public CreateProductRequest(String title, String description, int price, int discountPersent, int discountedPrice, int quantity, String brand, String color, Set<Size> sizes, String imageUrl, String topLevelCategory, String secondLevelCategory, String thirdLevelCategory) {
+    public CreateProductRequest(String title, String description, int price, int discountPersent, int discountedPrice, int quantity, String brand, String color, List<ProductSize> sizes, String imageUrl, String topLevelCategory, String secondLevelCategory, String thirdLevelCategory) {
         this.title = title;
         this.description = description;
         this.price = price;
@@ -103,11 +103,11 @@ public class CreateProductRequest {
         this.color = color;
     }
 
-    public Set<Size> getSizes() {
+    public List<ProductSize> getSizes() {
         return sizes;
     }
 
-    public void setSizes(Set<Size> sizes) {
+    public void setSizes(List<ProductSize> sizes) {
         this.sizes = sizes;
     }
 
