@@ -2,13 +2,20 @@ package com.ecommerce.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.ecommerce.exception.ProductException;
 import com.ecommerce.model.Category;
 import com.ecommerce.model.Product;
+import com.ecommerce.model.ProductSize;
 import com.ecommerce.repository.CategoryRepository;
 import com.ecommerce.repository.ProductRepository;
 import com.ecommerce.request.CreateProductRequest;
@@ -28,50 +35,55 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product createProduct(CreateProductRequest createProductRequest) {
-        // TODO Auto-generated method stub
-
-        Category topLevel=categoryRepository.findByName(createProductRequest.getTopLevelCategory());
-        if(topLevel!=null) {
-            Category topLevelCategory=new Category();
-            topLevelCategory.setName(createProductRequest.getTopLevelCategory());
-            topLevelCategory.setLevel(1);
-
-            topLevel=categoryRepository.save(topLevelCategory); 
+    public Product createProduct(CreateProductRequest req) {
+        // Xử lý category theo cấp
+        Category topLevel = categoryRepository.findByName(req.getTopLevelCategory());
+        if(topLevel == null) {
+            topLevel = new Category();
+            topLevel.setName(req.getTopLevelCategory());
+            topLevel.setLevel(1);
+            topLevel = categoryRepository.save(topLevel);
         }
 
-        Category secondLevel=categoryRepository.findByName(createProductRequest.getSecondLevelCategory());
-        if(secondLevel!=null) {
-            Category secondLevelCategory=new Category();
-            secondLevelCategory.setName(createProductRequest.getSecondLevelCategory());
-            secondLevelCategory.setLevel(2);
-            
+        Category secondLevel = categoryRepository.findByName(req.getSecondLevelCategory());
+        if(secondLevel == null) {
+            secondLevel = new Category();
+            secondLevel.setName(req.getSecondLevelCategory());
+            secondLevel.setLevel(2);
+            secondLevel.setParentCategory(topLevel);
+            secondLevel = categoryRepository.save(secondLevel);
         }
 
-        // Đoạn code này dùng để kiểm tra và tạo danh mục cấp 3 cho sản phẩm
-        // Đầu tiên tìm kiếm danh mục cấp 3 trong database theo tên
-        Category thirdLevel=categoryRepository.findByName(createProductRequest.getThirdLevelCategory());
-        // Nếu danh mục cấp 3 chưa tồn tại (null) thì tạo mới
-        if(thirdLevel!=null) {
-            Category thirdLevelCategory=new Category(); // Tạo đối tượng Category mới
-            thirdLevelCategory.setName(createProductRequest.getThirdLevelCategory()); // Set tên từ request
-            thirdLevelCategory.setLevel(3); // Set level = 3 vì là danh mục cấp 3
-            // Lưu ý: Thiếu đoạn lưu category vào database
+        Category thirdLevel = categoryRepository.findByName(req.getThirdLevelCategory());
+        if(thirdLevel == null) {
+            thirdLevel = new Category();
+            thirdLevel.setName(req.getThirdLevelCategory());
+            thirdLevel.setLevel(3);
+            thirdLevel.setParentCategory(secondLevel);
+            thirdLevel = categoryRepository.save(thirdLevel);
         }
 
-        Product product=new Product();
-        product.setTitle(createProductRequest.getTitle());
-        product.setDescription(createProductRequest.getDescription());
-        product.setPrice(createProductRequest.getPrice());
-        product.setDiscountedPrice(createProductRequest.getDiscountedPrice());
-        product.setDiscountPersent(createProductRequest.getDiscountPersent());
-        product.setQuantity(createProductRequest.getQuantity());
-        product.setBrand(createProductRequest.getBrand());
-        product.setColor(createProductRequest.getColor());
-        product.setSizes(createProductRequest.getSizes());
-        product.setImageUrl(createProductRequest.getImageUrl());
-        product.setCreatedAt(LocalDateTime.now());
+        // Tạo sản phẩm mới
+        Product product = new Product();
+        product.setTitle(req.getTitle());
+        product.setDescription(req.getDescription());
+        product.setPrice(req.getPrice());
+        product.setDiscountPersent(req.getDiscountPersent());
+        product.setDiscountedPrice(req.getDiscountedPrice());
+        product.setQuantity(req.getQuantity());
+        product.setBrand(req.getBrand());
+        product.setColor(req.getColor());
+        product.setImageUrl(req.getImageUrl());
         product.setCategory(thirdLevel);
+        product.setCreatedAt(LocalDateTime.now());
+
+        // Xử lý sizes
+        if (req.getSizes() != null) {
+            for (ProductSize size : req.getSizes()) {
+                size.setProduct(product);
+            }
+            product.setSizes(req.getSizes());
+        }
 
         return productRepository.save(product);
     }
@@ -100,7 +112,13 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Product findProductById(Long id) throws ProductException {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findProductById'");
+        Optional<Product> product=productRepository.findById(id);
+
+        if(product.isPresent()) {
+            return product.get();
+        }
+
+        throw new ProductException("Product not found with id: " + id);
     }
 
     @Override
@@ -114,7 +132,31 @@ public class ProductServiceImpl implements ProductService {
             Integer maxPrice, Integer minDiscount, String sort, String stock, Integer pageNumber, Integer pageSize)
             throws ProductException {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findAllProducts'");
+
+        Pageable pageable= PageRequest.of(pageNumber, pageSize);
+
+        List<Product> products=productRepository.filterProducts(category, minPrice, maxPrice, minDiscount, sort);
+
+        if(!colors.isEmpty()) {
+            products=products.stream().filter(product -> colors.stream().anyMatch(c -> c.equalsIgnoreCase(product.getColor()))).collect(Collectors.toList());
+        }
+
+        if(stock!=null) {
+            if(stock.equals("in_stock")) {
+                products=products.stream().filter(p -> p.getQuantity()>0).collect(Collectors.toList());
+            }
+            else if(stock.equals("out_of_stock")) {
+                products=products.stream().filter(p -> p.getQuantity()==0).collect(Collectors.toList());
+            }
+        }
+
+        int startIndex=(int) pageable.getOffset();
+        int endIndex=Math.min((startIndex+pageable.getPageSize()), products.size());
+
+        List<Product> pageProducts=products.subList(startIndex, endIndex);
+
+        Page<Product> filterdProducts=new PageImpl<>(pageProducts, pageable, products.size());
+        return filterdProducts;
     }
     
 }

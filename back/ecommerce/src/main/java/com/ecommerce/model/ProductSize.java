@@ -1,6 +1,8 @@
 package com.ecommerce.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -12,16 +14,18 @@ public class ProductSize {
     @Column(name = "id")
     private Long id;
 
-    @NotBlank
+    @NotBlank(message = "Size name is required")
     @Column(name = "name")
     private String name;
 
-    @NotNull
+    @NotNull(message = "Quantity is required")
+    @Min(value = 0, message = "Quantity must be greater than or equal to 0")
     @Column(name = "quantity")
     private Integer quantity;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
+    @JsonIgnore
     private Product product;
 
     public ProductSize() {

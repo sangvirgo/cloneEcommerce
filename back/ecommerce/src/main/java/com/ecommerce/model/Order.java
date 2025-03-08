@@ -28,17 +28,42 @@ public class Order {
     private LocalDateTime orderDate;
 
     @Column(name = "total_amount")
-    private double totalAmount;
+    private int totalAmount;
+
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Address shippingAddress;
+
+    @Column(name = "delivery_date")
+    private LocalDateTime deliveryDate;
+
+    @Column(name = "total_discounted_price")
+    private Integer totalDiscountedPrice;
+
+    @Column(name = "discount")
+    private Integer discount;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "total_items")
+    private Integer totalItems;
 
     public Order() {
     }
 
-    public Order(Long id, User user, List<OrderItem> orderItems, LocalDateTime orderDate, double totalAmount) {
+    public Order(Long id, User user, List<OrderItem> orderItems, List<PaymentDetail> paymentDetails, LocalDateTime orderDate, int totalAmount, Address shippingAddress, LocalDateTime deliveryDate, Integer totalDiscountedPrice, Integer discount, String status, Integer totalItems) {
         this.id = id;
         this.user = user;
         this.orderItems = orderItems;
+        this.paymentDetails = paymentDetails;
         this.orderDate = orderDate;
         this.totalAmount = totalAmount;
+        this.shippingAddress = shippingAddress;
+        this.deliveryDate = deliveryDate;
+        this.totalDiscountedPrice = totalDiscountedPrice;
+        this.discount = discount;
+        this.status = status;
+        this.totalItems = totalItems;
     }
 
     // Getters và setters
@@ -82,11 +107,59 @@ public class Order {
         this.orderDate = orderDate;
     }
 
-    public double getTotalAmount() {
+    public int getTotalAmount() {
         return totalAmount;
     }
 
-    public void setTotalAmount(double totalAmount) {
+    public void setTotalAmount(int totalAmount) {
         this.totalAmount = totalAmount;
+    }
+
+    public Address getShippingAddress() {
+        return shippingAddress;
+    }
+
+    public void setShippingAddress(Address shippingAddress) {
+        this.shippingAddress = shippingAddress;
+    }
+
+    public LocalDateTime getDeliveryDate() {
+        return deliveryDate;
+    }
+
+    public void setDeliveryDate(LocalDateTime deliveryDate) {
+        this.deliveryDate = deliveryDate;
+    }
+
+    public Integer getTotalDiscountedPrice() {
+        return totalDiscountedPrice;
+    }
+
+    public void setTotalDiscountedPrice(Integer totalDiscountedPrice) {
+        this.totalDiscountedPrice = totalDiscountedPrice;
+    }
+
+    public Integer getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(Integer discount) {
+        this.discount = discount;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Integer getTotalItems() {
+        return totalItems;
+    }
+
+    public void setTotalItems(Integer totalItems) {
+        this.totalItems = totalItems;
     }
 }
