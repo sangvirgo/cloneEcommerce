@@ -1,8 +1,9 @@
 package com.ecommerce.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "cart_item")
@@ -12,26 +13,45 @@ public class CartItem {
     @Column(name = "id")
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_id", nullable = false)
     private Cart cart;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @Min(0)
+    @Column(name = "size")
+    private String size;
+
+    @NotNull
+    @Min(1)
     @Column(name = "quantity", nullable = false)
     private int quantity;
+
+    @Column(name = "price")
+    private int price;
+
+    @Column(name = "discounted_price")
+    private int discountedPrice;
 
     public CartItem() {
     }
 
-    public CartItem(Long id, Cart cart, Product product, int quantity) {
+    public CartItem(Long id, Cart cart, User user, Product product, String size, int quantity, int price, int discountedPrice) {
         this.id = id;
         this.cart = cart;
+        this.user = user;
         this.product = product;
+        this.size = size;
         this.quantity = quantity;
+        this.price = price;
+        this.discountedPrice = discountedPrice;
     }
 
     public Long getId() {
@@ -50,6 +70,14 @@ public class CartItem {
         this.cart = cart;
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     public Product getProduct() {
         return product;
     }
@@ -58,11 +86,35 @@ public class CartItem {
         this.product = product;
     }
 
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
+    }
+
     public int getQuantity() {
         return quantity;
     }
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public int getPrice() {
+        return price;
+    }
+
+    public void setPrice(int price) {
+        this.price = price;
+    }
+
+    public int getDiscountedPrice() {
+        return discountedPrice;
+    }
+
+    public void setDiscountedPrice(int discountedPrice) {
+        this.discountedPrice = discountedPrice;
     }
 }

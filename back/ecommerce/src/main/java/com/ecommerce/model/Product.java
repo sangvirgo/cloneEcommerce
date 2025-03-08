@@ -1,8 +1,10 @@
 package com.ecommerce.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
@@ -18,73 +20,85 @@ public class Product {
     @Column(name = "id")
     private Long id;
 
-    @NotBlank
-    @Size(max = 100)
+    @NotBlank(message = "Title is required")
+    @Size(max = 100, message = "Title must be less than 100 characters")
     @Column(name = "title")
     private String title;
 
-    @Size(max = 500)
+    @Size(max = 500, message = "Description must be less than 500 characters")
     @Column(name = "description")
     private String description;
 
-    @Min(0)
+    @NotNull(message = "Price is required")
+    @Min(value = 0, message = "Price must be greater than or equal to 0")
     @Column(name = "price")
     private int price;
 
-    @Min(0)
+    @Min(value = 0, message = "Discount percent must be greater than or equal to 0")
     @Column(name = "discount_persent")
     private int discountPersent;
 
-    @Min(0)
+    @Min(value = 0, message = "Discounted price must be greater than or equal to 0")
     @Column(name = "discounted_price")
     private int discountedPrice;
 
-    @Min(0)
+    @Min(value = 0, message = "Quantity must be greater than or equal to 0")
     @Column(name = "quantity")
-    private int quantity; // Sửa từ "quatity"
+    private int quantity;
 
-    @NotBlank
-    @Size(max = 50)
+    @NotBlank(message = "Brand is required")
+    @Size(max = 50, message = "Brand must be less than 50 characters")
     @Column(name = "brand")
     private String brand;
 
+    @Size(max = 20, message = "Color must be less than 20 characters")
     @Column(name = "color")
     private String color;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductSize> sizes = new ArrayList<>();
 
-    @Size(max = 255)
+    @Size(max = 255, message = "Image URL must be less than 255 characters")
     @Column(name = "image_url")
     private String imageUrl;
 
     @OneToMany(mappedBy = "product")
+    @JsonIgnore
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @OneToMany(mappedBy = "product")
+    @JsonIgnore
     private List<CartItem> cartItems = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Rating> ratings = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Review> reviews = new ArrayList<>();
 
-    @Min(0)
+    @Min(value = 0, message = "Number of ratings must be greater than or equal to 0")
     @Column(name = "num_rating")
     private int numRating;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
+    @JsonIgnore
     private Category category;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
     public Product() {
     }
 
-    public Product(Long id, String title, String description, int price, int discountPersent, int discountedPrice, int quantity, String brand, String color, String imageUrl, List<Rating> ratings, List<Review> reviews, int numRating, Category category, LocalDateTime createdAt) {
+    public Product(Long id, String title, String description, int price, int discountPersent, int discountedPrice, int quantity, String brand, String color, String imageUrl, List<Rating> ratings, List<Review> reviews, int numRating, Category category) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -99,7 +113,7 @@ public class Product {
         this.reviews = reviews;
         this.numRating = numRating;
         this.category = category;
-        this.createdAt = createdAt;
+        this.createdAt = LocalDateTime.now();
     }
 
     public Long getId() {

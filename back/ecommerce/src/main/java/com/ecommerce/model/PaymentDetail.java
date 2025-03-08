@@ -1,11 +1,7 @@
 package com.ecommerce.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "payment_detail")
@@ -13,84 +9,64 @@ public class PaymentDetail {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "payment_id")
+    private String paymentId;
+
+    @Column(name = "payment_method")
+    private String paymentMethod; // "VNPay"
+
+    @Column(name = "status")
+    private String status; // "pending", "completed", "failed"
+
+    @Column(name = "amount")
+    private int amount;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_information_id")
-    private PaymentInformation paymentInformation;
+    // 4 trường quan trọng nhất cho VNPay
+    @Column(name = "vnp_TxnRef")
+    private String vnp_TxnRef; // Mã tham chiếu giao dịch tại hệ thống bạn
 
-    @NotNull
-    @Column(name = "amount", nullable = false)
-    private Double amount;
+    @Column(name = "vnp_TransactionNo")
+    private String vnp_TransactionNo; // Mã giao dịch tại hệ thống VNPay
 
-    @NotBlank
-    @Size(max = 50)
-    @Column(name = "payment_method", nullable = false)
-    private String paymentMethod;
+    @Column(name = "vnp_ResponseCode")
+    private String vnp_ResponseCode; // Mã phản hồi từ VNPay ("00" là thành công)
 
-    @NotBlank
-    @Size(max = 50)
-    @Column(name = "status", nullable = false)
-    private String status;
+    @Column(name = "vnp_SecureHash")
+    private String vnp_SecureHash; // Mã kiểm tra tính toàn vẹn dữ liệu từ VNPay
 
-    @Column(name = "transaction_id", unique = true)
-    private String transactionId;
-
-    @Column(name = "payment_date", nullable = false)
-    private LocalDateTime paymentDate;
-
-    @PrePersist
-    protected void onCreate() {
-        this.paymentDate = LocalDateTime.now();
+    public PaymentDetail() {
     }
 
-    public PaymentDetail() {}
-
-    public PaymentDetail(Long id, Order order, PaymentInformation paymentInformation, Double amount, String paymentMethod, String status, String transactionId) {
-        this.id = id;
-        this.order = order;
-        this.paymentInformation = paymentInformation;
-        this.amount = amount;
+    public PaymentDetail(String paymentId, String paymentMethod, String status, int amount, Order order, String vnp_TxnRef, String vnp_TransactionNo, String vnp_ResponseCode, String vnp_SecureHash) {
+        this.paymentId = paymentId;
         this.paymentMethod = paymentMethod;
         this.status = status;
-        this.transactionId = transactionId;
-        this.paymentDate = LocalDateTime.now();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Order getOrder() {
-        return order;
-    }
-
-    public void setOrder(Order order) {
-        this.order = order;
-    }
-
-    public PaymentInformation getPaymentInformation() {
-        return paymentInformation;
-    }
-
-    public void setPaymentInformation(PaymentInformation paymentInformation) {
-        this.paymentInformation = paymentInformation;
-    }
-
-    public Double getAmount() {
-        return amount;
-    }
-
-    public void setAmount(Double amount) {
         this.amount = amount;
+        this.order = order;
+        this.vnp_TxnRef = vnp_TxnRef;
+        this.vnp_TransactionNo = vnp_TransactionNo;
+        this.vnp_ResponseCode = vnp_ResponseCode;
+        this.vnp_SecureHash = vnp_SecureHash;
+    }
+
+    public String getVnp_TxnRef() {
+        return vnp_TxnRef;
+    }
+
+    public void setVnp_TxnRef(String vnp_TxnRef) {
+        this.vnp_TxnRef = vnp_TxnRef;
+    }
+
+    public String getPaymentId() {
+        return paymentId;
+    }
+
+    public void setPaymentId(String paymentId) {
+        this.paymentId = paymentId;
     }
 
     public String getPaymentMethod() {
@@ -109,20 +85,43 @@ public class PaymentDetail {
         this.status = status;
     }
 
-    public String getTransactionId() {
-        return transactionId;
+    public int getAmount() {
+        return amount;
     }
 
-    public void setTransactionId(String transactionId) {
-        this.transactionId = transactionId;
+    public void setAmount(int amount) {
+        this.amount = amount;
     }
 
-    public LocalDateTime getPaymentDate() {
-        return paymentDate;
+    public Order getOrder() {
+        return order;
     }
 
-    public void setPaymentDate(LocalDateTime paymentDate) {
-        this.paymentDate = paymentDate;
+    public void setOrder(Order order) {
+        this.order = order;
     }
 
+    public String getVnp_TransactionNo() {
+        return vnp_TransactionNo;
+    }
+
+    public void setVnp_TransactionNo(String vnp_TransactionNo) {
+        this.vnp_TransactionNo = vnp_TransactionNo;
+    }
+
+    public String getVnp_ResponseCode() {
+        return vnp_ResponseCode;
+    }
+
+    public void setVnp_ResponseCode(String vnp_ResponseCode) {
+        this.vnp_ResponseCode = vnp_ResponseCode;
+    }
+
+    public String getVnp_SecureHash() {
+        return vnp_SecureHash;
+    }
+
+    public void setVnp_SecureHash(String vnp_SecureHash) {
+        this.vnp_SecureHash = vnp_SecureHash;
+    }
 }

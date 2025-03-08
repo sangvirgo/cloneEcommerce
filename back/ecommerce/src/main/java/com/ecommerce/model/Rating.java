@@ -27,7 +27,7 @@ public class Rating {
     @Min(0)
     @Max(5)
     @Column(name = "rating", nullable = false)
-    private double rating;
+    private int rating;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -40,7 +40,7 @@ public class Rating {
     public Rating() {
     }
 
-    public Rating(Long id, User user, Product product, double rating, LocalDateTime createdAt) {
+    public Rating(Long id, User user, Product product, int rating, LocalDateTime createdAt) {
         this.id = id;
         this.user = user;
         this.product = product;
@@ -72,11 +72,11 @@ public class Rating {
         this.product = product;
     }
 
-    public double getRating() {
+    public int getRating() {
         return rating;
     }
 
-    public void setRating(double rating) {
+    public void setRating(int rating) {
         this.rating = rating;
     }
 
