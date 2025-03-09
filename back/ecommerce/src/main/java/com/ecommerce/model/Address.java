@@ -54,6 +54,9 @@ public class Address {
     @Column(name = "mobile")
     private String mobile;
 
+    @OneToOne(mappedBy = "shippingAddress", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Order order;
+
     public Address() {
     }
 

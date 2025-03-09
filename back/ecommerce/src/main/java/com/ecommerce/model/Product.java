@@ -98,7 +98,7 @@ public class Product {
     public Product() {
     }
 
-    public Product(Long id, String title, String description, int price, int discountPersent, int discountedPrice, int quantity, String brand, String color, String imageUrl, List<Rating> ratings, List<Review> reviews, int numRating, Category category) {
+    public Product(Long id, String title, String description, int price, int discountPersent, int discountedPrice, int quantity, String brand, String color, List<ProductSize> sizes, String imageUrl, List<OrderItem> orderItems, List<CartItem> cartItems, List<Rating> ratings, List<Review> reviews, int numRating, Category category, LocalDateTime createdAt) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -108,12 +108,15 @@ public class Product {
         this.quantity = quantity;
         this.brand = brand;
         this.color = color;
+        this.sizes = sizes;
         this.imageUrl = imageUrl;
+        this.orderItems = orderItems;
+        this.cartItems = cartItems;
         this.ratings = ratings;
         this.reviews = reviews;
         this.numRating = numRating;
         this.category = category;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = createdAt;
     }
 
     public Long getId() {
@@ -242,5 +245,21 @@ public class Product {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
+    }
+
+    public void setOrderItems(List<OrderItem> orderItems) {
+        this.orderItems = orderItems;
+    }
+
+    public List<CartItem> getCartItems() {
+        return cartItems;
+    }
+
+    public void setCartItems(List<CartItem> cartItems) {
+        this.cartItems = cartItems;
     }
 }
