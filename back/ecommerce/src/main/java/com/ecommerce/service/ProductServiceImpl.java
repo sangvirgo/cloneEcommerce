@@ -3,16 +3,15 @@ package com.ecommerce.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+import com.ecommerce.exception.GlobalExceptionHandler;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import com.ecommerce.exception.ProductException;
 import com.ecommerce.model.Category;
 import com.ecommerce.model.Product;
 import com.ecommerce.model.ProductSize;
@@ -89,18 +88,18 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public String deleteProduct(Long id) throws ProductException {
+    public String deleteProduct(Long id) throws GlobalExceptionHandler {
         // TODO Auto-generated method stub
         Product product=findProductById(id);
         if(product==null) {
-            throw new ProductException("Product not found with id: " + id);
+            throw new GlobalExceptionHandler();
         }
         productRepository.delete(product);
         return "Product deleted successfully";
     }
 
     @Override
-    public Product updateProduct(Long id, Product product) throws ProductException {
+    public Product updateProduct(Long id, Product product) throws GlobalExceptionHandler {
         // TODO Auto-generated method stub
         Product existingProduct=findProductById(id);
         if(existingProduct.getQuantity()!=0) {
@@ -110,7 +109,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product findProductById(Long id) throws ProductException {
+    public Product findProductById(Long id) throws GlobalExceptionHandler {
         // TODO Auto-generated method stub
         Optional<Product> product=productRepository.findById(id);
 
@@ -118,19 +117,19 @@ public class ProductServiceImpl implements ProductService {
             return product.get();
         }
 
-        throw new ProductException("Product not found with id: " + id);
+        throw new GlobalExceptionHandler();
     }
 
     @Override
-    public List<Product> findProductsByCategory(String category) throws ProductException {
+    public List<Product> findProductsByCategory(String category) throws GlobalExceptionHandler {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findProductsByCategory'");
+        throw new GlobalExceptionHandler();
     }
 
     @Override
     public Page<Product> findAllProducts(String category, List<String> colors, List<String> sizes, Integer minPrice,
             Integer maxPrice, Integer minDiscount, String sort, String stock, Integer pageNumber, Integer pageSize)
-            throws ProductException {
+            throws GlobalExceptionHandler {
         // TODO Auto-generated method stub
 
         Pageable pageable= PageRequest.of(pageNumber, pageSize);
@@ -158,5 +157,7 @@ public class ProductServiceImpl implements ProductService {
         Page<Product> filterdProducts=new PageImpl<>(pageProducts, pageable, products.size());
         return filterdProducts;
     }
-    
+
+
+
 }
