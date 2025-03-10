@@ -2,16 +2,13 @@ package com.ecommerce.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "order_item")
 public class OrderItem {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
     @JsonIgnore
@@ -29,37 +26,30 @@ public class OrderItem {
     @Column(name = "price")
     private int price;
 
-    @Column(name = "sizes")
-    private String sizes;
+    @Column(name = "size")
+    private String size;
 
-    @Column(name="discounted_price")
+    @Column(name = "discounted_price")
     private Integer discountedPrice;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @Column(name = "delivery_time")
-    private LocalTime deliveryTime;
-
-
+    @Column(name = "delivery_date")
+    private LocalDateTime deliveryDate;
 
     public OrderItem() {
     }
 
-    public OrderItem(Long id, Order order, Product product, int quantity, int price, String sizes, Integer discountedPrice, User user, LocalTime deliveryTime) {
+    public OrderItem(Long id, Order order, Product product, int quantity, int price, String size, Integer discountedPrice, LocalDateTime deliveryDate) {
         this.id = id;
         this.order = order;
         this.product = product;
         this.quantity = quantity;
         this.price = price;
-        this.sizes = sizes;
+        this.size = size;
         this.discountedPrice = discountedPrice;
-        this.user = user;
-        this.deliveryTime = deliveryTime;
+        this.deliveryDate = deliveryDate;
     }
 
-
+    // Getters and setters
     public Long getId() {
         return id;
     }
@@ -100,12 +90,12 @@ public class OrderItem {
         this.price = price;
     }
 
-    public String getSizes() {
-        return sizes;
+    public String getSize() {
+        return size;
     }
 
-    public void setSizes(String sizes) {
-        this.sizes = sizes;
+    public void setSize(String size) {
+        this.size = size;
     }
 
     public Integer getDiscountedPrice() {
@@ -116,19 +106,16 @@ public class OrderItem {
         this.discountedPrice = discountedPrice;
     }
 
+    public LocalDateTime getDeliveryDate() {
+        return deliveryDate;
+    }
+
+    public void setDeliveryDate(LocalDateTime deliveryDate) {
+        this.deliveryDate = deliveryDate;
+    }
+
+    // Helper method to get user through order
     public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public LocalTime getDeliveryTime() {
-        return deliveryTime;
-    }
-
-    public void setDeliveryTime(LocalTime deliveryTime) {
-        this.deliveryTime = deliveryTime;
+        return order != null ? order.getUser() : null;
     }
 }

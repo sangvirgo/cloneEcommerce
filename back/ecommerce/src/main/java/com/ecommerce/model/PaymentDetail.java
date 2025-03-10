@@ -1,29 +1,44 @@
 package com.ecommerce.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-
+import lombok.Data;
 
 @Entity
+@Data
 @Table(name = "payment_detail")
 public class PaymentDetail {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payment_id")
-    private String paymentId;
+    private Long id;
 
     @Column(name = "payment_method")
     private String paymentMethod; // "VNPay"
 
-    @Column(name = "status")
-    private String status; // "pending", "completed", "failed"
+    @Column(name = "payment_status")
+    private String paymentStatus;
+
+    @Column(name = "transaction_id")
+    private String transactionId;
 
     @Column(name = "amount")
-    private int amount;
+    private Double amount;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
+    @Column(name = "currency")
+    private String currency;
+
+    @OneToOne
+    @JoinColumn(name = "order_id")
+    @JsonIgnore
     private Order order;
+
+    @Column(name = "payment_date")
+    private java.time.LocalDateTime paymentDate;
+
+    @Column(name = "payment_description")
+    private String paymentDescription;
 
     // 4 trường quan trọng nhất cho VNPay
     @Column(name = "vnp_TxnRef")
@@ -41,11 +56,11 @@ public class PaymentDetail {
     public PaymentDetail() {
     }
 
-    public PaymentDetail(String paymentId, String paymentMethod, String status, int amount, Order order, String vnp_TxnRef, String vnp_TransactionNo, String vnp_ResponseCode, String vnp_SecureHash) {
-        this.paymentId = paymentId;
+    public PaymentDetail(Long paymentId, String paymentMethod, String status, int amount, Order order, String vnp_TxnRef, String vnp_TransactionNo, String vnp_ResponseCode, String vnp_SecureHash) {
+        this.id = paymentId;
         this.paymentMethod = paymentMethod;
-        this.status = status;
-        this.amount = amount;
+        this.paymentStatus = status;
+        this.amount = (double) amount;
         this.order = order;
         this.vnp_TxnRef = vnp_TxnRef;
         this.vnp_TransactionNo = vnp_TransactionNo;
@@ -61,12 +76,12 @@ public class PaymentDetail {
         this.vnp_TxnRef = vnp_TxnRef;
     }
 
-    public String getPaymentId() {
-        return paymentId;
+    public Long getPaymentId() {
+        return id;
     }
 
-    public void setPaymentId(String paymentId) {
-        this.paymentId = paymentId;
+    public void setPaymentId(Long paymentId) {
+        this.id = paymentId;
     }
 
     public String getPaymentMethod() {
@@ -77,19 +92,19 @@ public class PaymentDetail {
         this.paymentMethod = paymentMethod;
     }
 
-    public String getStatus() {
-        return status;
+    public String getPaymentStatus() {
+        return paymentStatus;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
     }
 
-    public int getAmount() {
+    public Double getAmount() {
         return amount;
     }
 
-    public void setAmount(int amount) {
+    public void setAmount(Double amount) {
         this.amount = amount;
     }
 

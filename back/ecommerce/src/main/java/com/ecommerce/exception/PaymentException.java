@@ -1,9 +1,9 @@
 package com.ecommerce.exception;
 
-public class CartItemException extends Exception {
+public class PaymentException extends Exception {
     private String code;
 
-    public CartItemException(String message, String code) {
+    public PaymentException(String message, String code) {
         super(message);
         this.code = code;
     }
@@ -15,4 +15,4 @@ public class CartItemException extends Exception {
     public void setCode(String code) {
         this.code = code;
     }
-}
+} 

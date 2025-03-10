@@ -13,14 +13,10 @@ public class CartItem {
     @Column(name = "id")
     private Long id;
 
-    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_id", nullable = false)
+    @JsonIgnore
     private Cart cart;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
@@ -43,10 +39,9 @@ public class CartItem {
     public CartItem() {
     }
 
-    public CartItem(Long id, Cart cart, User user, Product product, String size, int quantity, int price, int discountedPrice) {
+    public CartItem(Long id, Cart cart, Product product, String size, int quantity, int price, int discountedPrice) {
         this.id = id;
         this.cart = cart;
-        this.user = user;
         this.product = product;
         this.size = size;
         this.quantity = quantity;
@@ -68,14 +63,6 @@ public class CartItem {
 
     public void setCart(Cart cart) {
         this.cart = cart;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
     }
 
     public Product getProduct() {
@@ -116,5 +103,9 @@ public class CartItem {
 
     public void setDiscountedPrice(int discountedPrice) {
         this.discountedPrice = discountedPrice;
+    }
+
+    public User getUser() {
+        return cart != null ? cart.getUser() : null;
     }
 }

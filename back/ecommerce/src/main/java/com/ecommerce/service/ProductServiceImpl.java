@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.ecommerce.exception.GlobalExceptionHandler;
+import com.ecommerce.exception.ProductException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -127,7 +128,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Page<Product> findAllProducts(String category, List<String> colors, List<String> sizes, Integer minPrice,
+    public Page<Product> findAllProductsByFilter(String category, List<String> colors, List<String> sizes, Integer minPrice,
             Integer maxPrice, Integer minDiscount, String sort, String stock, Integer pageNumber, Integer pageSize)
             throws GlobalExceptionHandler {
         // TODO Auto-generated method stub
@@ -158,6 +159,12 @@ public class ProductServiceImpl implements ProductService {
         return filterdProducts;
     }
 
+    @Override
+    public List<Product> findAllProducts() throws GlobalExceptionHandler {
+        // TODO Auto-generated method stub
+
+        return productRepository.findAll();
+    }
 
 
 }

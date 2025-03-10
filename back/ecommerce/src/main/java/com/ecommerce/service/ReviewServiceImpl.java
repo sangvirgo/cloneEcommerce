@@ -1,5 +1,6 @@
 package com.ecommerce.service;
 
+import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.model.*;
 import com.ecommerce.repository.ProductRepository;
 import com.ecommerce.repository.ReviewRepository;
@@ -24,7 +25,7 @@ public class ReviewServiceImpl implements ReviewService{
     }
 
     @Override
-    public Review createReview(User user, ReviewRequest reviewRequest) throws GeneralSecurityException {
+    public Review createReview(User user, ReviewRequest reviewRequest) throws GlobalExceptionHandler {
         Product product = productService.findProductById(reviewRequest.getProductId());
 
         Review review = new Review();
@@ -37,7 +38,7 @@ public class ReviewServiceImpl implements ReviewService{
     }
 
     @Override
-    public List<Review> getReviewsByProductId(Long productId) throws GeneralSecurityException{
+    public List<Review> getReviewsByProductId(Long productId) throws GlobalExceptionHandler{
         return reviewRepository.findAllByProductId(productId);
     }
 }
