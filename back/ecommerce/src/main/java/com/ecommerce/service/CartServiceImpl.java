@@ -1,6 +1,7 @@
 package com.ecommerce.service;
 
 import com.ecommerce.exception.CartItemException;
+import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.exception.ProductException;
 import com.ecommerce.model.Cart;
 import com.ecommerce.model.CartItem;
@@ -31,17 +32,17 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public String addCartItem(Long userId, AddItemRequest req) throws ProductException, CartItemException {
+    public String addCartItem(Long userId, AddItemRequest req) throws GlobalExceptionHandler {
         Cart cart = cartRepository.findByUserId(userId);
         if (cart == null) {
-            throw new CartItemException("Cart not found for user: " + userId);
+            throw new GlobalExceptionHandler();
         }
 
         Product product = productService.findProductById(req.getProductId());
         
         // Kiểm tra số lượng trong kho
         if (product.getQuantity() < req.getQuantity()) {
-            throw new ProductException("Insufficient stock. Available: " + product.getQuantity());
+            throw new GlobalExceptionHandler();
         }
 
         CartItem isPresent = cartItemService.isCartItemExist(cart, product, req.getSize().get(0).getName(), userId);
@@ -50,7 +51,6 @@ public class CartServiceImpl implements CartService {
             CartItem cartItem = new CartItem();
             cartItem.setCart(cart);
             cartItem.setProduct(product);
-            cartItem.setUser(cart.getUser());
             cartItem.setSize(req.getSize().get(0).getName());
             cartItem.setQuantity(req.getQuantity());
             
@@ -68,7 +68,7 @@ public class CartServiceImpl implements CartService {
             // Cập nhật số lượng nếu item đã tồn tại
             int newQuantity = isPresent.getQuantity() + req.getQuantity();
             if (product.getQuantity() < newQuantity) {
-                throw new ProductException("Insufficient stock for total quantity: " + newQuantity);
+                throw new GlobalExceptionHandler();
             }
             isPresent.setQuantity(newQuantity);
             isPresent.setPrice(product.getPrice() * newQuantity);

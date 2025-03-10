@@ -1,32 +1,59 @@
 package com.ecommerce.exception;
 
-import jakarta.persistence.EntityExistsException;
-import jakarta.persistence.EntityNotFoundException;
+import com.ecommerce.response.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
-public class GlobalExceptionHandler extends RuntimeException {
+public class GlobalExceptionHandler extends Exception {
+    private String message;
+    private String code;
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<String> handleEntityNotFoundException(EntityNotFoundException ex){
-        return new ResponseEntity<>("Error: " + ex.getMessage(), HttpStatus.NOT_FOUND);
+    public GlobalExceptionHandler(String message) {
+        super(message);
+        this.message = message;
+        this.code = "GLOBAL_ERROR";
     }
 
-    @ExceptionHandler(EntityExistsException.class)
-    public ResponseEntity<String> handleEntityExistsException(EntityExistsException ex){
-        return new ResponseEntity<>("Error: " + ex.getMessage(), HttpStatus.CONFLICT);
+    public GlobalExceptionHandler(String message, String code) {
+        super(message);
+        this.message = message;
+        this.code = code;
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<String> handleRuntimeException(RuntimeException ex){
-        return new ResponseEntity<>("Runtime Error: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleException(Exception ex){
-        return new ResponseEntity<>("General Error: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<ErrorResponse> handleException(Exception e) {
+        ErrorResponse error = new ErrorResponse(e.getMessage(), "INTERNAL_SERVER_ERROR");
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(CartItemException.class)
+    public ResponseEntity<ErrorResponse> handleCartItemException(CartItemException e) {
+        ErrorResponse error = new ErrorResponse(e.getMessage(), e.getCode());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(PaymentException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentException(PaymentException e) {
+        ErrorResponse error = new ErrorResponse(e.getMessage(), e.getCode());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 }

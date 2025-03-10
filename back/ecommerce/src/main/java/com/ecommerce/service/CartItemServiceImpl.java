@@ -1,6 +1,7 @@
 package com.ecommerce.service;
 
 import com.ecommerce.exception.CartItemException;
+import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.exception.UserException;
 import com.ecommerce.model.*;
 import com.ecommerce.repository.CartItemRepository;
@@ -39,21 +40,21 @@ public class CartItemServiceImpl implements CartItemService {
     }
 
     @Override
-    public CartItem updateCartItem(Long userId, Long cartItemId, CartItem cartItem) throws CartItemException, UserException {
+    public CartItem updateCartItem(Long userId, Long cartItemId, CartItem cartItem) throws GlobalExceptionHandler {
         CartItem item = findCartItemById(cartItemId);
         User user = userService.findUserById(userId);
 
         if (item == null) {
-            throw new CartItemException("Cart item not found");
+            throw new GlobalExceptionHandler();
         }
 
         if (user == null) {
-            throw new UserException("User not found", "404");
+            throw new GlobalExceptionHandler();
         }
 
         // Kiểm tra quyền sở hữu
         if (!item.getUser().getId().equals(userId)) {
-            throw new CartItemException("You can't modify other user's cart items");
+            throw new GlobalExceptionHandler();
         }
 
         // Cập nhật số lượng và giá
@@ -65,36 +66,36 @@ public class CartItemServiceImpl implements CartItemService {
     }
 
     @Override
-    public void deleteAllCartItems(Long cartId, Long userId) throws CartItemException, UserException {
+    public void deleteAllCartItems(Long cartId, Long userId) throws GlobalExceptionHandler {
         CartItem item = findCartItemById(cartId);
         User user = userService.findUserById(userId);
 
         if (item == null) {
-            throw new CartItemException("Cart item not found");
+            throw new GlobalExceptionHandler("Cart item not found with id: " + cartId);
         }
 
         if (user == null) {
-            throw new UserException("User not found", "404");
+            throw new GlobalExceptionHandler("User not found with id: " + userId);
         }
 
         if (!item.getUser().getId().equals(userId)) {
-            throw new CartItemException("You can't delete other user's cart items");
+            throw new GlobalExceptionHandler("User not found with id: " + userId);
         }
 
         cartItemRepository.deleteById(cartId);
     }
 
     @Override
-    public CartItem isCartItemExist(Cart cart, Product product, String size, Long userId) throws CartItemException {
+    public CartItem isCartItemExist(Cart cart, Product product, String size, Long userId) throws GlobalExceptionHandler {
         return cartItemRepository.isCartItemExist(cart, product, size, userId);
     }
 
     @Override
-    public CartItem findCartItemById(Long cartItemId) throws CartItemException {
+    public CartItem findCartItemById(Long cartItemId) throws GlobalExceptionHandler {
         Optional<CartItem> opt = cartItemRepository.findById(cartItemId);
         if (opt.isPresent()) {
             return opt.get();
         }
-        throw new CartItemException("Cart item not found with id: " + cartItemId);
+        throw new GlobalExceptionHandler("Cart item not found with id: " + cartItemId);
     }
 }

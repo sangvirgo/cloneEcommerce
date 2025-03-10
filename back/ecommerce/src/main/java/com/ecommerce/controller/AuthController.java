@@ -2,10 +2,14 @@ package com.ecommerce.controller;
 
 import com.ecommerce.config.JwtProvider;
 import com.ecommerce.exception.UserException;
+import com.ecommerce.model.Cart;
 import com.ecommerce.model.User;
 import com.ecommerce.repository.UserRepository;
 import com.ecommerce.request.LoginRequest;
 import com.ecommerce.response.AuthResponse;
+import com.ecommerce.DTO.CartDTO;
+import com.ecommerce.response.UserProfileResponse;
+import com.ecommerce.service.CartService;
 import com.ecommerce.service.CustomerUserServiceImplementation;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +21,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 
@@ -32,14 +33,16 @@ public class AuthController {
     private JwtProvider jwtProvider;
     private PasswordEncoder passwordEncoder;
     private CustomerUserServiceImplementation customerUserServiceImplementation;
+    private CartService cartService;
 
     @Autowired
     public AuthController(UserRepository userRepository, JwtProvider jwtProvider,
-           PasswordEncoder passwordEncoder, CustomerUserServiceImplementation customerUserServiceImplementation) {
+           PasswordEncoder passwordEncoder, CustomerUserServiceImplementation customerUserServiceImplementation, CartService cartService) {
         this.userRepository = userRepository;
         this.jwtProvider=jwtProvider;
         this.passwordEncoder=passwordEncoder;
         this.customerUserServiceImplementation=customerUserServiceImplementation;
+        this.cartService=cartService;
     }
 
     @PostMapping("/register")
@@ -49,6 +52,8 @@ public class AuthController {
         String password = user.getPassword();
         String firstName = user.getFirstName();
         String lastName = user.getLastName();
+        String mobile = user.getMobile();
+        String role = user.getRole();
 
         User isUserExist = userRepository.findByEmail(email);
 
@@ -61,9 +66,12 @@ public class AuthController {
         createdUser.setPassword(passwordEncoder.encode(password));
         createdUser.setFirstName(firstName);
         createdUser.setLastName(lastName);
+        createdUser.setMobile(mobile);
+        createdUser.setRole(role);
 
         User savedUser = userRepository.save(createdUser); // save user to database
-
+        Cart cart=cartService.createCart(savedUser);
+        
         Authentication authentication=new UsernamePasswordAuthenticationToken(savedUser.getEmail(), null, new ArrayList<>());
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
