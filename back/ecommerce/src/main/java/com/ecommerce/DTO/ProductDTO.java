@@ -16,6 +16,6 @@ public class ProductDTO {
     private String color;
     private List<String> sizes;
     private String imageUrl;
-    private double averageRating;
+    private int averageRating;
     private int numRatings;
 }

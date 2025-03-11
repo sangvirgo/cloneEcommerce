@@ -21,13 +21,13 @@ public class User {
     @Column(name = "user_id")
     private Long id;
 
-    @NotBlank(message = "Password is required")
-    @Size(max = 50)
+    @NotBlank(message = "First name is required")
+    @Size(max = 50, message = "First name must be less than 50 characters")
     @Column(name = "first_name")
     private String firstName;
 
-    @NotBlank(message = "Password is required")
-    @Size(max = 50)
+    @NotBlank(message = "Last name is required")
+    @Size(max = 50, message = "Last name must be less than 50 characters")
     @Column(name = "last_name")
     private String lastName;
 
@@ -36,50 +36,61 @@ public class User {
     @Column(name = "password")
     private String password;
 
-    @NotBlank
-    @Email
-    @Size(max = 100)
+    @NotBlank(message = "Email is required")
+    @Email(message = "Please provide a valid email address")
+    @Size(max = 100, message = "Email must be less than 100 characters")
     @Column(name = "email", unique = true)
     private String email;
 
-    @Size(max = 20)
+    @Size(max = 20, message = "Role must be less than 20 characters")
     @Column(name = "role")
     private String role;
 
-    @Size(max = 15)
+    @Size(max = 15, message = "Mobile number must be less than 15 characters")
     @Column(name = "mobile")
     private String mobile;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<Address> address = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<PaymentInformation> paymentInformation = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<Rating> ratings = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<Review> reviews = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<Order> orders = new ArrayList<>();
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private Cart cart;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @PrePersist
-    protected void onCreate() {
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Address> address = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<PaymentInformation> paymentInformation = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Rating> ratings = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Review> reviews = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Order> orders = new ArrayList<>();
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Cart cart;
+
+    public User() {
+    }
+
+    public User(String firstName, String lastName, String password, String email, String role, String mobile) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.password = password;
+        this.email = email;
+        this.role = role;
+        this.mobile = mobile;
         this.createdAt = LocalDateTime.now();
     }
 
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

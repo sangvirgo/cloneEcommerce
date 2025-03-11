@@ -1,9 +1,9 @@
-package com.ecommerce.service.impl;
+package com.ecommerce.service;
 
 import com.ecommerce.exception.PaymentException;
 import com.ecommerce.model.PaymentDetail;
 import com.ecommerce.repository.PaymentRepository;
-import com.ecommerce.service.PaymentService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

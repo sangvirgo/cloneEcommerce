@@ -4,9 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
 @Entity
-@Table(name = "cart_item")
+@Table(name = "cart_items")
+@Data
 public class CartItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,7 +41,8 @@ public class CartItem {
     public CartItem() {
     }
 
-    public CartItem(Long id, Cart cart, Product product, String size, int quantity, int price, int discountedPrice) {
+    public CartItem(Long id, Cart cart, Product product, String size,
+                   int quantity, int price, int discountedPrice) {
         this.id = id;
         this.cart = cart;
         this.product = product;

@@ -35,48 +35,52 @@ public class CartServiceImpl implements CartService {
     public String addCartItem(Long userId, AddItemRequest req) throws GlobalExceptionHandler {
         Cart cart = cartRepository.findByUserId(userId);
         if (cart == null) {
-            throw new GlobalExceptionHandler();
+            throw new GlobalExceptionHandler("Cart not found");
         }
 
-        Product product = productService.findProductById(req.getProductId());
-        
-        // Kiểm tra số lượng trong kho
-        if (product.getQuantity() < req.getQuantity()) {
-            throw new GlobalExceptionHandler();
-        }
-
-        CartItem isPresent = cartItemService.isCartItemExist(cart, product, req.getSize().get(0).getName(), userId);
-        
-        if (isPresent == null) {
-            CartItem cartItem = new CartItem();
-            cartItem.setCart(cart);
-            cartItem.setProduct(product);
-            cartItem.setSize(req.getSize().get(0).getName());
-            cartItem.setQuantity(req.getQuantity());
+        try {
+            Product product = productService.findProductById(req.getProductId());
             
-            // Tính giá có tính đến giảm giá
-            int price = product.getPrice() * cartItem.getQuantity();
-            int discountedPrice = product.getDiscountedPrice() * cartItem.getQuantity();
-            
-            cartItem.setPrice(price);
-            cartItem.setDiscountedPrice(discountedPrice);
-            
-            CartItem savedItem = cartItemService.createCartItem(cartItem);
-            cart.getCartItems().add(savedItem);
-            cartRepository.save(cart);
-        } else {
-            // Cập nhật số lượng nếu item đã tồn tại
-            int newQuantity = isPresent.getQuantity() + req.getQuantity();
-            if (product.getQuantity() < newQuantity) {
-                throw new GlobalExceptionHandler();
+            // Kiểm tra số lượng trong kho
+            if (product.getQuantity() < req.getQuantity()) {
+                throw new GlobalExceptionHandler("Product quantity is not enough");
             }
-            isPresent.setQuantity(newQuantity);
-            isPresent.setPrice(product.getPrice() * newQuantity);
-            isPresent.setDiscountedPrice(product.getDiscountedPrice() * newQuantity);
-            cartItemService.createCartItem(isPresent);
-        }
 
-        return "Item added to cart successfully";
+            CartItem isPresent = cartItemService.isCartItemExist(cart, product, req.getSize().get(0).getName(), userId);
+            
+            if (isPresent == null) {
+                CartItem cartItem = new CartItem();
+                cartItem.setCart(cart);
+                cartItem.setProduct(product);
+                cartItem.setSize(req.getSize().get(0).getName());
+                cartItem.setQuantity(req.getQuantity());
+                
+                // Tính giá có tính đến giảm giá
+                int price = product.getPrice() * cartItem.getQuantity();
+                int discountedPrice = product.getDiscountedPrice() * cartItem.getQuantity();
+                
+                cartItem.setPrice(price);
+                cartItem.setDiscountedPrice(discountedPrice);
+                
+                CartItem savedItem = cartItemService.createCartItem(cartItem);
+                cart.getCartItems().add(savedItem);
+                cartRepository.save(cart);
+            } else {
+                // Cập nhật số lượng nếu item đã tồn tại
+                int newQuantity = isPresent.getQuantity() + req.getQuantity();
+                if (product.getQuantity() < newQuantity) {
+                    throw new GlobalExceptionHandler("Product quantity is not enough");
+                }
+                isPresent.setQuantity(newQuantity);
+                isPresent.setPrice(product.getPrice() * newQuantity);
+                isPresent.setDiscountedPrice(product.getDiscountedPrice() * newQuantity);
+                cartItemService.createCartItem(isPresent);
+            }
+
+            return "Item added to cart successfully";
+        } catch (ProductException e) {
+            throw new GlobalExceptionHandler(e.getMessage(), e.getCode());
+        }
     }
 
     @Override
@@ -99,7 +103,7 @@ public class CartServiceImpl implements CartService {
         cart.setTotalPrice(totalPrice);
         cart.setTotalDiscountedPrice(totalDiscountedPrice);
         cart.setTotalItems(totalItems);
-        cart.setTotal(totalPrice - totalDiscountedPrice);
+        cart.setDiscount((int)(((totalPrice - totalDiscountedPrice) / totalPrice) * 100));
 
         return cartRepository.save(cart);
     }

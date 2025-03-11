@@ -7,8 +7,8 @@ import lombok.Data;
 public class CartDTO {
     private Long id;
     private int totalPrice;
-    private Integer totalItems;
-    private Integer totalDiscountedPrice;
+    private int totalItems;
+    private int totalDiscountedPrice;
     private int total;
 
     public CartDTO(Cart cart) {

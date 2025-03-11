@@ -45,7 +45,8 @@ public class ProductController {
 
     @GetMapping("/products/category/{category}")
     public ResponseEntity<List<Product>> findProductsByCategory(@PathVariable String category) throws ProductException {
-        List<Product> products = productService.findProductsByCategory(category);
+        List<Product> products = productService.findAllProductsByFilter(category, null, null, 
+            null, null, null, null, null, 0, Integer.MAX_VALUE).getContent();
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 

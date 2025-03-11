@@ -1,5 +1,6 @@
 package com.ecommerce.service;
 
+import com.ecommerce.DTO.UserDTO;
 import com.ecommerce.config.JwtProvider;
 import com.ecommerce.exception.UserException;
 import com.ecommerce.model.User;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
     private JwtProvider jwtProvider;
 
@@ -20,7 +21,6 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public User findUserById(Long id) throws UserException {
-
         Optional<User> user = userRepository.findById(id);
         if(user.isPresent()){
             return user.get();
@@ -29,12 +29,23 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public User findUserProfileByJwt(String jwt) throws UserException {
-        String email= jwtProvider.getEmailFromToken(jwt);
+    public UserDTO findUserProfileByJwt(String jwt) throws UserException {
+        String email = jwtProvider.getEmailFromToken(jwt);
         User user = userRepository.findByEmail(email);
 
-        if(user==null){
-            throw new UserException("User not found "+ email, "404");
+        if(user == null) {
+            throw new UserException("User not found " + email, "404");
+        }
+        return new UserDTO(user);
+    }
+
+    @Override
+    public User findUserByJwt(String jwt) throws UserException {
+        String email = jwtProvider.getEmailFromToken(jwt);
+        User user = userRepository.findByEmail(email);
+
+        if(user == null) {
+            throw new UserException("User not found " + email, "404");
         }
         return user;
     }

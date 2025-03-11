@@ -3,20 +3,22 @@ package com.ecommerce.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "category")
+@Data
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "category_id")
     private Long categoryId;
 
-    @NotNull
-    @Size(min=1, max = 50)
+    @NotNull(message = "Category name is required")
+    @Size(min = 1, max = 50, message = "Category name must be between 1 and 50 characters")
     @Column(name = "name")
     private String name;
 
@@ -24,7 +26,7 @@ public class Category {
     @JoinColumn(name = "parent_category_id")
     private Category parentCategory;
 
-    @OneToMany(mappedBy = "parentCategory", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "parentCategory", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Category> subCategories = new ArrayList<>();
 
     @Column(name = "level", nullable = false)
@@ -33,42 +35,19 @@ public class Category {
     public Category() {
     }
 
-    public Category(Long categoryId, String name, Category parentCategory, int level) {
-        this.categoryId = categoryId;
+    public Category(String name, Category parentCategory) {
         this.name = name;
         this.parentCategory = parentCategory;
-        this.level = level;
+        this.level = (parentCategory != null) ? parentCategory.getLevel() + 1 : 1;
     }
 
-    public Long getCategoryId() {
-        return categoryId;
+    public void addSubCategory(Category subCategory) {
+        subCategories.add(subCategory);
+        subCategory.setParentCategory(this);
     }
 
-    public void setCategoryId(Long categoryId) {
-        this.categoryId = categoryId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Category getParentCategory() {
-        return parentCategory;
-    }
-
-    public void setParentCategory(Category parentCategory) {
-        this.parentCategory = parentCategory;
-    }
-
-    public int getLevel() {
-        return level;
-    }
-
-    public void setLevel(int level) {
-        this.level = level;
+    public void removeSubCategory(Category subCategory) {
+        subCategories.remove(subCategory);
+        subCategory.setParentCategory(null);
     }
 }

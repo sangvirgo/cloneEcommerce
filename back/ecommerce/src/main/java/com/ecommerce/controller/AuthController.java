@@ -2,6 +2,7 @@ package com.ecommerce.controller;
 
 import com.ecommerce.config.JwtProvider;
 import com.ecommerce.exception.UserException;
+import com.ecommerce.model.Address;
 import com.ecommerce.model.Cart;
 import com.ecommerce.model.User;
 import com.ecommerce.repository.UserRepository;
@@ -24,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @RestController // Đánh dấu lớp là controller trả về JSON.
 @RequestMapping("/auth")
@@ -46,14 +48,14 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> createUserHandler(@RequestBody @Valid User user) {  //Trả về phản hồi HTTP với body là AuthResponse. Nhận dữ liệu JSON từ client, validate nó trước khi xử lý.
-
+    public ResponseEntity<AuthResponse> createUserHandler(@RequestBody @Valid User user) {
         String email = user.getEmail();
         String password = user.getPassword();
         String firstName = user.getFirstName();
         String lastName = user.getLastName();
         String mobile = user.getMobile();
         String role = user.getRole();
+        List<Address> addresses = user.getAddress();
 
         User isUserExist = userRepository.findByEmail(email);
 
@@ -61,6 +63,7 @@ public class AuthController {
             throw new UserException("Email is already used with another account", "USER_EXISTS");
         }
 
+        // Tạo và lưu user trước
         User createdUser = new User();
         createdUser.setEmail(email);
         createdUser.setPassword(passwordEncoder.encode(password));
@@ -68,16 +71,29 @@ public class AuthController {
         createdUser.setLastName(lastName);
         createdUser.setMobile(mobile);
         createdUser.setRole(role);
-
-        User savedUser = userRepository.save(createdUser); // save user to database
-        Cart cart=cartService.createCart(savedUser);
         
-        Authentication authentication=new UsernamePasswordAuthenticationToken(savedUser.getEmail(), null, new ArrayList<>());
+        User savedUser = userRepository.save(createdUser);
+
+        // Sau khi có user đã lưu, thiết lập quan hệ với address
+        if (addresses != null) {
+            for (Address address : addresses) {
+                address.setUser(savedUser);
+            }
+            savedUser.setAddress(addresses);
+            savedUser = userRepository.save(savedUser);
+        }
+
+        // Tạo cart cho user mới
+        Cart cart = cartService.createCart(savedUser);
+        savedUser.setCart(cart);
+        userRepository.save(savedUser);
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(savedUser.getEmail(), null, new ArrayList<>());
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String token=jwtProvider.generateToken(authentication);
+        String token = jwtProvider.generateToken(authentication);
 
-        AuthResponse authResponse=new AuthResponse();
+        AuthResponse authResponse = new AuthResponse();
         authResponse.setJwt(token);
         authResponse.setMessage("User registered successfully");
 

@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.exception.ProductException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -19,6 +18,7 @@ import com.ecommerce.model.ProductSize;
 import com.ecommerce.repository.CategoryRepository;
 import com.ecommerce.repository.ProductRepository;
 import com.ecommerce.request.CreateProductRequest;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -27,7 +27,6 @@ public class ProductServiceImpl implements ProductService {
     private CategoryRepository categoryRepository;
     private UserService userService;
     
-
     public ProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository, UserService userService) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
@@ -35,7 +34,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product createProduct(CreateProductRequest req) {
+    @Transactional
+    public Product createProduct(CreateProductRequest req) throws ProductException {
         // Xử lý category theo cấp
         Category topLevel = categoryRepository.findByName(req.getTopLevelCategory());
         if(topLevel == null) {
@@ -89,82 +89,81 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public String deleteProduct(Long id) throws GlobalExceptionHandler {
-        // TODO Auto-generated method stub
-        Product product=findProductById(id);
-        if(product==null) {
-            throw new GlobalExceptionHandler();
+    @Transactional
+    public String deleteProduct(Long id) throws ProductException {
+        Product product = findProductById(id);
+        if(product == null) {
+            throw new ProductException("Product not found with id: " + id, "PRODUCT_NOT_FOUND");
         }
         productRepository.delete(product);
         return "Product deleted successfully";
     }
 
     @Override
-    public Product updateProduct(Long id, Product product) throws GlobalExceptionHandler {
-        // TODO Auto-generated method stub
-        Product existingProduct=findProductById(id);
-        if(existingProduct.getQuantity()!=0) {
+    @Transactional
+    public Product updateProduct(Long id, Product product) throws ProductException {
+        Product existingProduct = findProductById(id);
+        if(existingProduct.getQuantity() != 0) {
             existingProduct.setQuantity(product.getQuantity());
         }
         return productRepository.save(existingProduct);
     }
 
     @Override
-    public Product findProductById(Long id) throws GlobalExceptionHandler {
-        // TODO Auto-generated method stub
-        Optional<Product> product=productRepository.findById(id);
-
+    public Product findProductById(Long id) throws ProductException {
+        Optional<Product> product = productRepository.findById(id);
         if(product.isPresent()) {
             return product.get();
         }
-
-        throw new GlobalExceptionHandler();
+        throw new ProductException("Product not found with id: " + id, "PRODUCT_NOT_FOUND");
     }
 
     @Override
-    public List<Product> findProductsByCategory(String category) throws GlobalExceptionHandler {
-        // TODO Auto-generated method stub
-        throw new GlobalExceptionHandler();
+    public List<Product> findProductByCategory(String category) throws ProductException {
+        return productRepository.findByCategoryName(category);
     }
 
     @Override
-    public Page<Product> findAllProductsByFilter(String category, List<String> colors, List<String> sizes, Integer minPrice,
-            Integer maxPrice, Integer minDiscount, String sort, String stock, Integer pageNumber, Integer pageSize)
-            throws GlobalExceptionHandler {
-        // TODO Auto-generated method stub
-
-        Pageable pageable= PageRequest.of(pageNumber, pageSize);
-
-        List<Product> products=productRepository.filterProducts(category, minPrice, maxPrice, minDiscount, sort);
+    public Page<Product> findAllProductsByFilter(String category, List<String> colors, List<String> sizes, 
+            Integer minPrice, Integer maxPrice, Integer minDiscount, String sort, String stock, 
+            Integer pageNumber, Integer pageSize) throws ProductException {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        List<Product> products = productRepository.filterProducts(category, minPrice, maxPrice, minDiscount, sort);
 
         if(!colors.isEmpty()) {
-            products=products.stream().filter(product -> colors.stream().anyMatch(c -> c.equalsIgnoreCase(product.getColor()))).collect(Collectors.toList());
+            products = products.stream()
+                .filter(product -> colors.stream().anyMatch(c -> c.equalsIgnoreCase(product.getColor())))
+                .collect(Collectors.toList());
         }
 
-        if(stock!=null) {
+        if(stock != null) {
             if(stock.equals("in_stock")) {
-                products=products.stream().filter(p -> p.getQuantity()>0).collect(Collectors.toList());
+                products = products.stream().filter(p -> p.getQuantity() > 0).collect(Collectors.toList());
             }
             else if(stock.equals("out_of_stock")) {
-                products=products.stream().filter(p -> p.getQuantity()==0).collect(Collectors.toList());
+                products = products.stream().filter(p -> p.getQuantity() == 0).collect(Collectors.toList());
             }
         }
 
-        int startIndex=(int) pageable.getOffset();
-        int endIndex=Math.min((startIndex+pageable.getPageSize()), products.size());
+        int startIndex = (int) pageable.getOffset();
+        int endIndex = Math.min((startIndex + pageable.getPageSize()), products.size());
+        List<Product> pageProducts = products.subList(startIndex, endIndex);
 
-        List<Product> pageProducts=products.subList(startIndex, endIndex);
-
-        Page<Product> filterdProducts=new PageImpl<>(pageProducts, pageable, products.size());
-        return filterdProducts;
+        return new PageImpl<>(pageProducts, pageable, products.size());
     }
 
     @Override
-    public List<Product> findAllProducts() throws GlobalExceptionHandler {
-        // TODO Auto-generated method stub
-
+    public List<Product> findAllProducts() throws ProductException {
         return productRepository.findAll();
     }
 
+    @Override
+    public List<Product> searchProducts(String keyword) throws ProductException {
+        return productRepository.findByTitleContainingIgnoreCase(keyword);
+    }
 
+    @Override
+    public List<Product> getFeaturedProducts() throws ProductException {
+        return productRepository.findByDiscountPersentGreaterThan(0);
+    }
 }
