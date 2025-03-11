@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 
+@Data
 @Entity
 @Table(name = "address")
 public class Address {
@@ -14,33 +16,33 @@ public class Address {
     @Column(name = "id")
     private Long id;
 
-    @NotBlank
-    @Size(max = 50)
+    @NotBlank(message = "First name is required")
+    @Size(max = 50, message = "First name must be less than 50 characters")
     @Column(name = "first_name")
     private String firstName;
 
-    @NotBlank
-    @Size(max = 50)
+    @NotBlank(message = "Last name is required")
+    @Size(max = 50, message = "Last name must be less than 50 characters")
     @Column(name = "last_name")
     private String lastName;
 
-    @NotBlank
-    @Size(max = 100)
+    @NotBlank(message = "Street address is required")
+    @Size(max = 100, message = "Street address must be less than 100 characters")
     @Column(name = "street_address")
     private String streetAddress;
 
-    @NotBlank
-    @Size(max = 50)
+    @NotBlank(message = "City is required")
+    @Size(max = 50, message = "City must be less than 50 characters")
     @Column(name = "city")
     private String city;
 
-    @NotBlank
-    @Size(max = 50)
+    @NotBlank(message = "State is required")
+    @Size(max = 50, message = "State must be less than 50 characters")
     @Column(name = "state")
     private String state;
 
-    @NotBlank
-    @Size(max = 10)
+    @NotBlank(message = "Zip code is required")
+    @Size(max = 10, message = "Zip code must be less than 10 characters")
     @Column(name = "zip_code")
     private String zipCode;
 
@@ -49,98 +51,26 @@ public class Address {
     @JsonIgnore
     private User user;
 
-    @NotBlank
-    @Size(max = 15)
+    @NotBlank(message = "Mobile number is required")
+    @Size(max = 15, message = "Mobile number must be less than 15 characters")
     @Column(name = "mobile")
     private String mobile;
 
-    @OneToOne(mappedBy = "shippingAddress", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "shippingAddress", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Order order;
 
     public Address() {
     }
 
-    public Address(String mobile, User user, String zipCode, String state, String city, String streetAddress, String lastName, String firstName, Long id) {
-        this.mobile = mobile;
-        this.user = user;
-        this.zipCode = zipCode;
-        this.state = state;
-        this.city = city;
-        this.streetAddress = streetAddress;
-        this.lastName = lastName;
+    public Address(String firstName, String lastName, String streetAddress,
+                  String city, String state, String zipCode, User user, String mobile) {
         this.firstName = firstName;
-        this.id = id;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
         this.lastName = lastName;
-    }
-
-    public String getStreetAddress() {
-        return streetAddress;
-    }
-
-    public void setStreetAddress(String streetAddress) {
         this.streetAddress = streetAddress;
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public void setCity(String city) {
         this.city = city;
-    }
-
-    public String getState() {
-        return state;
-    }
-
-    public void setState(String state) {
         this.state = state;
-    }
-
-    public String getZipCode() {
-        return zipCode;
-    }
-
-    public void setZipCode(String zipCode) {
         this.zipCode = zipCode;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
         this.user = user;
-    }
-
-    public String getMobile() {
-        return mobile;
-    }
-
-    public void setMobile(String mobile) {
         this.mobile = mobile;
     }
 }

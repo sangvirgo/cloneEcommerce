@@ -1,6 +1,7 @@
 package com.ecommerce.service;
 
 import com.ecommerce.exception.GlobalExceptionHandler;
+import com.ecommerce.exception.ProductException;
 import com.ecommerce.model.*;
 import com.ecommerce.repository.ProductRepository;
 import com.ecommerce.repository.ReviewRepository;
@@ -26,15 +27,19 @@ public class ReviewServiceImpl implements ReviewService{
 
     @Override
     public Review createReview(User user, ReviewRequest reviewRequest) throws GlobalExceptionHandler {
-        Product product = productService.findProductById(reviewRequest.getProductId());
+        try {
+            Product product = productService.findProductById(reviewRequest.getProductId());
 
-        Review review = new Review();
-        review.setContent(reviewRequest.getContent());
-        review.setProduct(product);
-        review.setUser(user);
-        review.setCreatedAt(LocalDateTime.now());
+            Review review = new Review();
+            review.setContent(reviewRequest.getContent());
+            review.setProduct(product);
+            review.setUser(user);
+            review.setCreatedAt(LocalDateTime.now());
 
-        return reviewRepository.save(review);
+            return reviewRepository.save(review);
+        } catch (ProductException e) {
+            throw new GlobalExceptionHandler(e.getMessage());
+        }
     }
 
     @Override

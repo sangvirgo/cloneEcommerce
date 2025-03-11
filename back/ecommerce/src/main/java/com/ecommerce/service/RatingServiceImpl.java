@@ -1,6 +1,7 @@
 package com.ecommerce.service;
 
 import com.ecommerce.exception.GlobalExceptionHandler;
+import com.ecommerce.exception.ProductException;
 import com.ecommerce.model.Product;
 import com.ecommerce.model.Rating;
 import com.ecommerce.model.User;
@@ -23,14 +24,18 @@ public class RatingServiceImpl implements RatingService {
 
     @Override
     public Rating createRating(RatingRequest ratingRequest, User user) throws GlobalExceptionHandler {
-        Product product = productService.findProductById(ratingRequest.getProductId());
+        try {
+            Product product = productService.findProductById(ratingRequest.getProductId());
 
-        Rating rating = new Rating();
-        rating.setRating(ratingRequest.getRating());
-        rating.setProduct(product);
-        rating.setUser(user);
-        rating.setCreateAt(LocalDateTime.now());
-        return ratingRepository.save(rating);
+            Rating rating = new Rating();
+            rating.setRating(ratingRequest.getRating());
+            rating.setProduct(product);
+            rating.setUser(user);
+            rating.setCreateAt(LocalDateTime.now());
+            return ratingRepository.save(rating);
+        } catch (ProductException e) {
+            throw new GlobalExceptionHandler(e.getMessage());
+        }
     }
 
     @Override

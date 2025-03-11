@@ -23,23 +23,20 @@ public class CartController {
 
     @GetMapping("/")
     public ResponseEntity<Cart> findUserCart(@RequestHeader("Authorization") String jwt) throws GlobalExceptionHandler {
-        User user = userService.findUserProfileByJwt(jwt);
+        User user = userService.findUserByJwt(jwt);
         Cart cart = cartService.findUserCart(user.getId());
         return new ResponseEntity<Cart>(cart, HttpStatus.OK);
     }
 
     @PutMapping("/add")
     public ResponseEntity<ApiResponse> addItemToCart(@RequestHeader("Authorization") String jwt, @RequestBody AddItemRequest addItemRequest) throws GlobalExceptionHandler {
-        User user=userService.findUserProfileByJwt(jwt);
+        User user = userService.findUserByJwt(jwt);
         cartService.addCartItem(user.getId(), addItemRequest);
 
-        ApiResponse res=new ApiResponse();
+        ApiResponse res = new ApiResponse();
         res.setMessage("Item added to cart successfully");
         res.setStatus(true);
 
         return new ResponseEntity<>(res, HttpStatus.CREATED);
     }
-
-    
-
 }

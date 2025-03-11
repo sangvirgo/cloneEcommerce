@@ -2,106 +2,59 @@ package com.ecommerce.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.Data;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "cart")
+@Data
 public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    @JsonIgnore
+    @OneToOne
     private User user;
 
-    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Column(name = "cart_items")
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL)
     @JsonIgnore
-    private Set<CartItem> cartItems=new HashSet<>();
+    private List<CartItem> cartItems = new ArrayList<>();
 
     @Column(name = "total_price")
     private int totalPrice;
 
     @Column(name = "total_items")
-    private Integer totalItems;
+    private int totalItems;
 
     @Column(name = "total_discounted_price")
-    private Integer totalDiscountedPrice;
+    private int totalDiscountedPrice;
 
-    @Column(name = "total")
-    private int total;
+    @Column(name = "discount")
+    private int discount;
 
     public Cart() {
     }
 
-    public Cart(Long id, User user, Set<CartItem> cartItems, int totalPrice, Integer totalItems, Integer totalDiscountedPrice, int total) {
+    public Cart(Long id, User user, List<CartItem> cartItems, int totalPrice, 
+                int totalItems, int totalDiscountedPrice, int discount) {
         this.id = id;
         this.user = user;
         this.cartItems = cartItems;
         this.totalPrice = totalPrice;
         this.totalItems = totalItems;
         this.totalDiscountedPrice = totalDiscountedPrice;
-        this.total = total;
+        this.discount = discount;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public Set<CartItem> getCartItems() {
-        return cartItems;
-    }
-
-    public void setCartItems(Set<CartItem> cartItems) {
-        this.cartItems = cartItems;
-    }
-
-    public int getTotalPrice() {
-        return totalPrice;
-    }
-
-    public void setTotalPrice(int totalPrice) {
-        this.totalPrice = totalPrice;
-    }
-
-    public Integer getTotalItems() {
-        return totalItems;
-    }
-
-    public void setTotalItems(Integer totalItems) {
-        this.totalItems = totalItems;
-    }
-
-    public Integer getTotalDiscountedPrice() {
-        return totalDiscountedPrice;
-    }
-
-    public void setTotalDiscountedPrice(Integer totalDiscountedPrice) {
-        this.totalDiscountedPrice = totalDiscountedPrice;
+    public int getTotalAmount() {
+        return cartItems.stream()
+                .mapToInt(item -> item.getProduct().getPrice() * item.getQuantity())
+                .sum();
     }
 
     public int getTotal() {
-        return total;
-    }
-
-    public void setTotal(int total) {
-        this.total = total;
+        return totalPrice - totalDiscountedPrice;
     }
 }

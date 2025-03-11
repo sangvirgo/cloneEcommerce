@@ -52,5 +52,4 @@ public class CreateProductRequest {
     @NotBlank(message = "Third level category is required")
     private String thirdLevelCategory;
 
-
 }

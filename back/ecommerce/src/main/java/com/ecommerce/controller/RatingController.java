@@ -24,7 +24,7 @@ public class RatingController {
 
     @PostMapping("/create")
     public ResponseEntity<Rating> createRating(@RequestHeader("Authorization") String jwt, @RequestBody RatingRequest ratingRequest) throws GlobalExceptionHandler {
-        User user = userService.findUserProfileByJwt(jwt);
+        User user = userService.findUserByJwt(jwt);
         Rating res = ratingService.createRating(ratingRequest, user);
         return new ResponseEntity<>(res, HttpStatus.CREATED);
     }

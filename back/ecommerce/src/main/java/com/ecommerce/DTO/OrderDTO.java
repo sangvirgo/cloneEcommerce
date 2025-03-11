@@ -1,5 +1,6 @@
 package com.ecommerce.DTO;
 
+import com.ecommerce.model.Order;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -16,4 +17,15 @@ public class OrderDTO {
     private LocalDateTime deliveryDate;
     private List<OrderItemDTO> orderItems;
     private AddressDTO shippingAddress;
+
+    public OrderDTO(Order order) {
+        this.id = order.getId();
+        this.status = order.getStatus();
+        this.totalAmount = order.getTotalAmount();
+        this.totalDiscountedPrice = order.getTotalDiscountedPrice();
+        this.totalItems = order.getTotalItems();
+        this.orderDate = order.getOrderDate();
+        this.deliveryDate = order.getDeliveryDate();
+        this.shippingAddress = new AddressDTO(order.getShippingAddress());
+    }
 }

@@ -11,6 +11,10 @@ public class GlobalExceptionHandler extends Exception {
     private String message;
     private String code;
 
+    public GlobalExceptionHandler() {
+        super();
+    }
+
     public GlobalExceptionHandler(String message) {
         super(message);
         this.message = message;

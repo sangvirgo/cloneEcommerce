@@ -2,7 +2,6 @@ package com.ecommerce.service;
 
 import com.ecommerce.exception.CartItemException;
 import com.ecommerce.exception.GlobalExceptionHandler;
-import com.ecommerce.exception.UserException;
 import com.ecommerce.model.*;
 import com.ecommerce.repository.CartItemRepository;
 import com.ecommerce.repository.CartRepository;
@@ -23,79 +22,87 @@ public class CartItemServiceImpl implements CartItemService {
     }
 
     @Override
-    public CartItem createCartItem(CartItem cartItem) {
-        // Kiểm tra số lượng
-        if (cartItem.getQuantity() <= 0) {
-            cartItem.setQuantity(1);
+    public CartItem addCartItem(CartItem cartItem) throws CartItemException {
+        try {
+            return cartItemRepository.save(cartItem);
+        } catch (Exception e) {
+            throw new CartItemException("Error adding cart item: " + e.getMessage(), "CART_ITEM_ADD_ERROR");
         }
+    }
 
-        // Tính toán giá
-        int price = cartItem.getProduct().getPrice() * cartItem.getQuantity();
-        int discountedPrice = cartItem.getProduct().getDiscountedPrice() * cartItem.getQuantity();
+    @Override
+    public CartItem updateCartItem(Long cartItemId, CartItem cartItem) throws CartItemException {
+        CartItem existingItem = getCartItemById(cartItemId);
+        try {
+            cartItem.setId(cartItemId);
+            return cartItemRepository.save(cartItem);
+        } catch (Exception e) {
+            throw new CartItemException("Error updating cart item: " + e.getMessage(), "CART_ITEM_UPDATE_ERROR");
+        }
+    }
 
-        cartItem.setPrice(price);
-        cartItem.setDiscountedPrice(discountedPrice);
+    @Override
+    public void deleteCartItem(Long cartItemId) throws CartItemException {
+        try {
+            cartItemRepository.deleteById(cartItemId);
+        } catch (Exception e) {
+            throw new CartItemException("Error deleting cart item: " + e.getMessage(), "CART_ITEM_DELETE_ERROR");
+        }
+    }
 
+    @Override
+    public CartItem getCartItemById(Long cartItemId) throws CartItemException {
+        return cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new CartItemException("Cart item not found with id: " + cartItemId, "CART_ITEM_NOT_FOUND"));
+    }
+
+    @Override
+    public boolean isCartItemExist(Long cartId, Long productId, String size) throws CartItemException {
+        return cartItemRepository.existsByCartIdAndProductIdAndSize(cartId, productId, size);
+    }
+
+    @Override
+    public CartItem createCartItem(CartItem cartItem) {
         return cartItemRepository.save(cartItem);
     }
 
     @Override
-    public CartItem updateCartItem(Long userId, Long cartItemId, CartItem cartItem) throws GlobalExceptionHandler {
-        CartItem item = findCartItemById(cartItemId);
-        User user = userService.findUserById(userId);
-
-        if (item == null) {
-            throw new GlobalExceptionHandler();
+    public CartItem updateCartItem(Long userId, Long id, CartItem cartItem) throws GlobalExceptionHandler {
+        try {
+            CartItem existingItem = getCartItemById(id);
+            cartItem.setId(id);
+            return cartItemRepository.save(cartItem);
+        } catch (CartItemException e) {
+            throw new GlobalExceptionHandler(e.getMessage(), e.getCode());
+        } catch (Exception e) {
+            throw new GlobalExceptionHandler("Error updating cart item: " + e.getMessage());
         }
-
-        if (user == null) {
-            throw new GlobalExceptionHandler();
-        }
-
-        // Kiểm tra quyền sở hữu
-        if (!item.getUser().getId().equals(userId)) {
-            throw new GlobalExceptionHandler();
-        }
-
-        // Cập nhật số lượng và giá
-        item.setQuantity(cartItem.getQuantity());
-        item.setPrice(item.getProduct().getPrice() * cartItem.getQuantity());
-        item.setDiscountedPrice(item.getProduct().getDiscountedPrice() * cartItem.getQuantity());
-
-        return cartItemRepository.save(item);
     }
 
     @Override
     public void deleteAllCartItems(Long cartId, Long userId) throws GlobalExceptionHandler {
-        CartItem item = findCartItemById(cartId);
-        User user = userService.findUserById(userId);
-
-        if (item == null) {
-            throw new GlobalExceptionHandler("Cart item not found with id: " + cartId);
+        try {
+            cartItemRepository.deleteByCartId(cartId);
+        } catch (Exception e) {
+            throw new GlobalExceptionHandler("Error deleting all cart items: " + e.getMessage());
         }
-
-        if (user == null) {
-            throw new GlobalExceptionHandler("User not found with id: " + userId);
-        }
-
-        if (!item.getUser().getId().equals(userId)) {
-            throw new GlobalExceptionHandler("User not found with id: " + userId);
-        }
-
-        cartItemRepository.deleteById(cartId);
     }
 
     @Override
     public CartItem isCartItemExist(Cart cart, Product product, String size, Long userId) throws GlobalExceptionHandler {
-        return cartItemRepository.isCartItemExist(cart, product, size, userId);
+        try {
+            return cartItemRepository.isCartItemExist(cart, product, size, userId);
+        } catch (Exception e) {
+            throw new GlobalExceptionHandler("Error checking cart item existence: " + e.getMessage());
+        }
     }
 
     @Override
     public CartItem findCartItemById(Long cartItemId) throws GlobalExceptionHandler {
-        Optional<CartItem> opt = cartItemRepository.findById(cartItemId);
-        if (opt.isPresent()) {
-            return opt.get();
+        try {
+            return getCartItemById(cartItemId);
+        } catch (CartItemException e) {
+            throw new GlobalExceptionHandler(e.getMessage(), e.getCode());
         }
-        throw new GlobalExceptionHandler("Cart item not found with id: " + cartItemId);
     }
 }

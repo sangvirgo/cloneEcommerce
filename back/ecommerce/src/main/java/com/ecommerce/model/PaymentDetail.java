@@ -24,7 +24,7 @@ public class PaymentDetail {
     private String transactionId;
 
     @Column(name = "amount")
-    private Double amount;
+    private int amount;
 
     @Column(name = "currency")
     private String currency;
@@ -60,7 +60,7 @@ public class PaymentDetail {
         this.id = paymentId;
         this.paymentMethod = paymentMethod;
         this.paymentStatus = status;
-        this.amount = (double) amount;
+        this.amount = (int) amount;
         this.order = order;
         this.vnp_TxnRef = vnp_TxnRef;
         this.vnp_TransactionNo = vnp_TransactionNo;
@@ -100,11 +100,11 @@ public class PaymentDetail {
         this.paymentStatus = paymentStatus;
     }
 
-    public Double getAmount() {
+    public int getAmount() {
         return amount;
     }
 
-    public void setAmount(Double amount) {
+    public void setAmount(int amount) {
         this.amount = amount;
     }
 
