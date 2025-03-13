@@ -1,7 +1,7 @@
 package com.ecommerce.controller;
 
 import com.ecommerce.DTO.*;
-import com.ecommerce.exception.UserException;
+import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.model.*;
 import com.ecommerce.repository.UserRepository;
 import com.ecommerce.response.UserProfileResponse;
@@ -28,13 +28,13 @@ public class UserController {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || authentication.getName() == null) {
-                throw new UserException("Authentication failed", "AUTH_ERROR");
+                throw new GlobalExceptionHandler("Authentication failed", "AUTH_ERROR");
             }
 
             String email = authentication.getName();
             User user = userRepository.findByEmail(email);
             if (user == null) {
-                throw new UserException("User not found", "USER_NOT_FOUND");
+                throw new GlobalExceptionHandler("User not found", "USER_NOT_FOUND");
             }
 
             // Kiểm tra danh sách địa chỉ, nếu null thì tạo danh sách rỗng
@@ -69,7 +69,7 @@ public class UserController {
             profileResponse.setOrders(orderDTOS);
 
             return ResponseEntity.ok(profileResponse);
-        } catch (UserException e) {
+        } catch (GlobalExceptionHandler e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);

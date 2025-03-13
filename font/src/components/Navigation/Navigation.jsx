@@ -21,6 +21,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@mui/material';
+import AuthModal from '../auth/AuthModal';
+
 
 const navigation = {
   categories: [
@@ -146,7 +148,17 @@ const navigation = {
 
 export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [close, setClose] = useState(false);
+  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+
+  const handleClose = () => {
+    setClose(!close);
+  }
+
+  const handleOpen = () => {
+    setOpen(true);
+  }
 
   // Hàm xử lý điều hướng khi nhấp vào các mục chính (Women, Men, Company, Stores)
   const handleNavigationClick = (path) => {
@@ -273,7 +285,7 @@ export default function Navigation() {
 
             <div className="space-y-6 border-t border-gray-200 px-4 py-6">
               <div className="flow-root">
-                <a href="#" className="-m-2 block p-2 font-medium text-gray-900">
+                <a href="#" className="-m-2 block p-2 font-medium text-gray-900" onClick={handleOpen}>
                   Sign in
                 </a>
               </div>
@@ -482,6 +494,8 @@ export default function Navigation() {
           </div>
         </nav>
       </header>
+
+      <AuthModal handleClose={handleClose} open={open}/>
     </div>
   );
 } 

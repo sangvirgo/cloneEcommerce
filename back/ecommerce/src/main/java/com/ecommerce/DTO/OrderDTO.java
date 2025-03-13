@@ -1,31 +1,35 @@
 package com.ecommerce.DTO;
 
+import com.ecommerce.enums.OrderStatus;
+import com.ecommerce.enums.PaymentStatus;
 import com.ecommerce.model.Order;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 public class OrderDTO {
     private Long id;
-    private String status;
+    private OrderStatus orderStatus; // Thêm orderStatus
     private int totalAmount;
-    private int totalDiscountedPrice;
+    private Integer totalDiscountedPrice; // Sửa thành Integer để đồng bộ với Order
+    private int discount; // Thêm discount
     private int totalItems;
     private LocalDateTime orderDate;
     private LocalDateTime deliveryDate;
-    private List<OrderItemDTO> orderItems;
     private AddressDTO shippingAddress;
+    private PaymentStatus paymentStatus;
 
     public OrderDTO(Order order) {
         this.id = order.getId();
-        this.status = order.getStatus();
+        this.orderStatus = order.getOrderStatus();
         this.totalAmount = order.getTotalAmount();
-        this.totalDiscountedPrice = order.getTotalDiscountedPrice();
+        this.totalDiscountedPrice = order.getTotalDiscountedPrice() != null ? order.getTotalDiscountedPrice() : 0;
+        this.discount = order.getDiscount();
         this.totalItems = order.getTotalItems();
         this.orderDate = order.getOrderDate();
         this.deliveryDate = order.getDeliveryDate();
         this.shippingAddress = new AddressDTO(order.getShippingAddress());
+        this.paymentStatus = order.getPaymentStatus();
     }
 }

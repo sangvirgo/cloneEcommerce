@@ -1,7 +1,6 @@
 package com.ecommerce.service;
 
 import com.ecommerce.exception.GlobalExceptionHandler;
-import com.ecommerce.exception.ProductException;
 import com.ecommerce.model.Product;
 import com.ecommerce.model.Rating;
 import com.ecommerce.model.User;
@@ -33,7 +32,7 @@ public class RatingServiceImpl implements RatingService {
             rating.setUser(user);
             rating.setCreateAt(LocalDateTime.now());
             return ratingRepository.save(rating);
-        } catch (ProductException e) {
+        } catch (GlobalExceptionHandler e) {
             throw new GlobalExceptionHandler(e.getMessage());
         }
     }

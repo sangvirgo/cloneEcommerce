@@ -1,28 +1,29 @@
 package com.ecommerce.service;
 
-import com.ecommerce.exception.CartItemException;
 import com.ecommerce.exception.GlobalExceptionHandler;
-import com.ecommerce.exception.ProductException;
 import com.ecommerce.model.Cart;
 import com.ecommerce.model.CartItem;
 import com.ecommerce.model.Product;
 import com.ecommerce.model.User;
 import com.ecommerce.repository.CartRepository;
+import com.ecommerce.repository.CartItemRepository;
 import com.ecommerce.request.AddItemRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class CartServiceImpl implements CartService {
 
+    @Autowired
     private CartRepository cartRepository;
-    private CartItemService cartItemService;
+    
+    @Autowired
+    private CartItemRepository cartItemRepository;
+    
+    @Autowired
     private ProductService productService;
-
-    public CartServiceImpl(CartRepository cartRepository, CartItemService cartItemService, ProductService productService) {
-        this.cartRepository = cartRepository;
-        this.cartItemService = cartItemService;
-        this.productService = productService;
-    }
 
     @Override
     public Cart createCart(User user) {
@@ -32,79 +33,109 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public String addCartItem(Long userId, AddItemRequest req) throws GlobalExceptionHandler {
+    public Cart findUserCart(Long userId) throws GlobalExceptionHandler {
         Cart cart = cartRepository.findByUserId(userId);
         if (cart == null) {
-            throw new GlobalExceptionHandler("Cart not found");
+            throw new GlobalExceptionHandler("Cart not found", "CART_NOT_FOUND");
         }
-
-        try {
-            Product product = productService.findProductById(req.getProductId());
-            
-            // Kiểm tra số lượng trong kho
-            if (product.getQuantity() < req.getQuantity()) {
-                throw new GlobalExceptionHandler("Product quantity is not enough");
-            }
-
-            CartItem isPresent = cartItemService.isCartItemExist(cart, product, req.getSize().get(0).getName(), userId);
-            
-            if (isPresent == null) {
-                CartItem cartItem = new CartItem();
-                cartItem.setCart(cart);
-                cartItem.setProduct(product);
-                cartItem.setSize(req.getSize().get(0).getName());
-                cartItem.setQuantity(req.getQuantity());
-                
-                // Tính giá có tính đến giảm giá
-                int price = product.getPrice() * cartItem.getQuantity();
-                int discountedPrice = product.getDiscountedPrice() * cartItem.getQuantity();
-                
-                cartItem.setPrice(price);
-                cartItem.setDiscountedPrice(discountedPrice);
-                
-                CartItem savedItem = cartItemService.createCartItem(cartItem);
-                cart.getCartItems().add(savedItem);
-                cartRepository.save(cart);
-            } else {
-                // Cập nhật số lượng nếu item đã tồn tại
-                int newQuantity = isPresent.getQuantity() + req.getQuantity();
-                if (product.getQuantity() < newQuantity) {
-                    throw new GlobalExceptionHandler("Product quantity is not enough");
-                }
-                isPresent.setQuantity(newQuantity);
-                isPresent.setPrice(product.getPrice() * newQuantity);
-                isPresent.setDiscountedPrice(product.getDiscountedPrice() * newQuantity);
-                cartItemService.createCartItem(isPresent);
-            }
-
-            return "Item added to cart successfully";
-        } catch (ProductException e) {
-            throw new GlobalExceptionHandler(e.getMessage(), e.getCode());
-        }
+        return cart;
     }
 
     @Override
-    public Cart findUserCart(Long userId) {
-        Cart cart = cartRepository.findByUserId(userId);
-        if (cart == null) {
-            return null;
+    public Cart addCartItem(Long userId, AddItemRequest req) throws GlobalExceptionHandler{
+        Cart cart = findUserCart(userId);
+        Product product = productService.findProductById(req.getProductId());
+        
+        // Kiểm tra sản phẩm có tồn tại trong giỏ hàng chưa
+        CartItem existingItem = cart.getCartItems().stream()
+                .filter(item -> item.getProduct().getId().equals(req.getProductId()) 
+                        && item.getSize().equals(req.getSize()))
+                .findFirst()
+                .orElse(null);
+        
+        if (existingItem != null) {
+            // Cập nhật số lượng nếu sản phẩm đã tồn tại
+            existingItem.setQuantity(existingItem.getQuantity() + req.getQuantity());
+            cartItemRepository.save(existingItem);
+        } else {
+            // Thêm sản phẩm mới vào giỏ hàng
+            CartItem newItem = new CartItem();
+            newItem.setCart(cart);
+            newItem.setProduct(product);
+            newItem.setSize(req.getSize());
+            newItem.setQuantity(req.getQuantity());
+            newItem.setPrice(product.getPrice());
+            newItem.setDiscountedPrice(product.getDiscountedPrice());
+            cart.getCartItems().add(newItem);
+            cartItemRepository.save(newItem);
         }
+        
+        updateCartTotals(cart);
+        return cartRepository.save(cart);
+    }
 
-        int totalPrice = 0;
-        int totalDiscountedPrice = 0;
-        int totalItems = 0;
-
-        for (CartItem cartItem : cart.getCartItems()) {
-            totalPrice += cartItem.getPrice();
-            totalDiscountedPrice += cartItem.getDiscountedPrice();
-            totalItems += cartItem.getQuantity();
+    @Override
+    public Cart updateCartItem(Long userId, Long itemId, AddItemRequest req) throws GlobalExceptionHandler {
+        Cart cart = findUserCart(userId);
+        CartItem item = cartItemRepository.findById(itemId)
+                .orElseThrow(() -> new GlobalExceptionHandler("Cart item not found", "ITEM_NOT_FOUND"));
+        
+        if (!item.getCart().getId().equals(cart.getId())) {
+            throw new GlobalExceptionHandler("Cart item does not belong to user", "INVALID_ITEM");
         }
+        
+        item.setQuantity(req.getQuantity());
+        cartItemRepository.save(item);
+        
+        updateCartTotals(cart);
+        return cartRepository.save(cart);
+    }
 
+    @Override
+    public void removeCartItem(Long userId, Long itemId) throws GlobalExceptionHandler {
+        Cart cart = findUserCart(userId);
+        CartItem item = cartItemRepository.findById(itemId)
+                .orElseThrow(() -> new GlobalExceptionHandler("Cart item not found", "ITEM_NOT_FOUND"));
+        
+        if (!item.getCart().getId().equals(cart.getId())) {
+            throw new GlobalExceptionHandler("Cart item does not belong to user", "INVALID_ITEM");
+        }
+        
+        cart.getCartItems().remove(item);
+        cartItemRepository.delete(item);
+        
+        updateCartTotals(cart);
+        cartRepository.save(cart);
+    }
+
+    @Override
+    public void clearCart(Long userId) throws GlobalExceptionHandler {
+        Cart cart = findUserCart(userId);
+        cartItemRepository.deleteAll(cart.getCartItems());
+        cart.getCartItems().clear();
+        
+        updateCartTotals(cart);
+        cartRepository.save(cart);
+    }
+
+    private void updateCartTotals(Cart cart) {
+        List<CartItem> items = cart.getCartItems();
+        
+        int totalPrice = items.stream()
+                .mapToInt(item -> item.getPrice() * item.getQuantity())
+                .sum();
+                
+        int totalDiscountedPrice = items.stream()
+                .mapToInt(item -> item.getDiscountedPrice() * item.getQuantity())
+                .sum();
+                
+        int totalItems = items.stream()
+                .mapToInt(CartItem::getQuantity)
+                .sum();
+                
         cart.setTotalPrice(totalPrice);
         cart.setTotalDiscountedPrice(totalDiscountedPrice);
         cart.setTotalItems(totalItems);
-        cart.setDiscount((int)(((totalPrice - totalDiscountedPrice) / totalPrice) * 100));
-
-        return cartRepository.save(cart);
+        cart.setDiscount(totalPrice - totalDiscountedPrice);
     }
 }

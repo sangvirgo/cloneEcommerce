@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.ecommerce.exception.ProductException;
+import com.ecommerce.exception.GlobalExceptionHandler;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -35,7 +35,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public Product createProduct(CreateProductRequest req) throws ProductException {
+    public Product createProduct(CreateProductRequest req) throws GlobalExceptionHandler {
         // Xử lý category theo cấp
         Category topLevel = categoryRepository.findByName(req.getTopLevelCategory());
         if(topLevel == null) {
@@ -90,10 +90,10 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public String deleteProduct(Long id) throws ProductException {
+    public String deleteProduct(Long id) throws GlobalExceptionHandler {
         Product product = findProductById(id);
         if(product == null) {
-            throw new ProductException("Product not found with id: " + id, "PRODUCT_NOT_FOUND");
+            throw new GlobalExceptionHandler("Product not found with id: " + id, "PRODUCT_NOT_FOUND");
         }
         productRepository.delete(product);
         return "Product deleted successfully";
@@ -101,7 +101,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public Product updateProduct(Long id, Product product) throws ProductException {
+    public Product updateProduct(Long id, Product product) throws GlobalExceptionHandler {
         Product existingProduct = findProductById(id);
         if(existingProduct.getQuantity() != 0) {
             existingProduct.setQuantity(product.getQuantity());
@@ -110,23 +110,23 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product findProductById(Long id) throws ProductException {
+    public Product findProductById(Long id) throws GlobalExceptionHandler {
         Optional<Product> product = productRepository.findById(id);
         if(product.isPresent()) {
             return product.get();
         }
-        throw new ProductException("Product not found with id: " + id, "PRODUCT_NOT_FOUND");
+        throw new GlobalExceptionHandler("Product not found with id: " + id, "PRODUCT_NOT_FOUND");
     }
 
     @Override
-    public List<Product> findProductByCategory(String category) throws ProductException {
+    public List<Product> findProductByCategory(String category) throws GlobalExceptionHandler {
         return productRepository.findByCategoryName(category);
     }
 
     @Override
     public Page<Product> findAllProductsByFilter(String category, List<String> colors, List<String> sizes, 
             Integer minPrice, Integer maxPrice, Integer minDiscount, String sort, String stock, 
-            Integer pageNumber, Integer pageSize) throws ProductException {
+            Integer pageNumber, Integer pageSize) throws GlobalExceptionHandler {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         List<Product> products = productRepository.filterProducts(category, minPrice, maxPrice, minDiscount, sort);
 
@@ -153,17 +153,17 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<Product> findAllProducts() throws ProductException {
+    public List<Product> findAllProducts() throws GlobalExceptionHandler {
         return productRepository.findAll();
     }
 
     @Override
-    public List<Product> searchProducts(String keyword) throws ProductException {
+    public List<Product> searchProducts(String keyword) throws GlobalExceptionHandler {
         return productRepository.findByTitleContainingIgnoreCase(keyword);
     }
 
     @Override
-    public List<Product> getFeaturedProducts() throws ProductException {
+    public List<Product> getFeaturedProducts() throws GlobalExceptionHandler {
         return productRepository.findByDiscountPersentGreaterThan(0);
     }
 }

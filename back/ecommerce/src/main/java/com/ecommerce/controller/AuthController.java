@@ -1,15 +1,13 @@
 package com.ecommerce.controller;
 
 import com.ecommerce.config.JwtProvider;
-import com.ecommerce.exception.UserException;
+import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.model.Address;
 import com.ecommerce.model.Cart;
 import com.ecommerce.model.User;
 import com.ecommerce.repository.UserRepository;
 import com.ecommerce.request.LoginRequest;
 import com.ecommerce.response.AuthResponse;
-import com.ecommerce.DTO.CartDTO;
-import com.ecommerce.response.UserProfileResponse;
 import com.ecommerce.service.CartService;
 import com.ecommerce.service.CustomerUserServiceImplementation;
 import jakarta.validation.Valid;
@@ -60,7 +58,7 @@ public class AuthController {
         User isUserExist = userRepository.findByEmail(email);
 
         if (isUserExist != null) {
-            throw new UserException("Email is already used with another account", "USER_EXISTS");
+            throw new GlobalExceptionHandler("Email is already used with another account", "USER_EXISTS");
         }
 
         // Tạo và lưu user trước

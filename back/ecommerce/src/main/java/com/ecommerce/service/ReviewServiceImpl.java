@@ -1,14 +1,12 @@
 package com.ecommerce.service;
 
 import com.ecommerce.exception.GlobalExceptionHandler;
-import com.ecommerce.exception.ProductException;
 import com.ecommerce.model.*;
 import com.ecommerce.repository.ProductRepository;
 import com.ecommerce.repository.ReviewRepository;
 import com.ecommerce.request.ReviewRequest;
 import org.springframework.stereotype.Service;
 
-import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -37,7 +35,7 @@ public class ReviewServiceImpl implements ReviewService{
             review.setCreatedAt(LocalDateTime.now());
 
             return reviewRepository.save(review);
-        } catch (ProductException e) {
+        } catch (GlobalExceptionHandler e) {
             throw new GlobalExceptionHandler(e.getMessage());
         }
     }

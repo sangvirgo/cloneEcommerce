@@ -1,9 +1,8 @@
 package com.ecommerce.controller;
 
-import com.ecommerce.exception.ProductException;
+import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.model.Product;
 import com.ecommerce.service.ProductService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -31,33 +30,33 @@ public class ProductController {
             @RequestParam(required = false) String stock,
             @RequestParam(defaultValue = "0") Integer pageNumber,
             @RequestParam(defaultValue = "10") Integer pageSize
-    ) throws ProductException {
+    ) throws GlobalExceptionHandler {
         Page<Product> res = productService.findAllProductsByFilter(category, colors, sizes, 
             minPrice, maxPrice, minDiscount, sort, stock, pageNumber, pageSize);
         return new ResponseEntity<>(res, HttpStatus.ACCEPTED);
     }
 
     @GetMapping("/products/id/{productId}")
-    public ResponseEntity<Product> findProductById(@PathVariable Long productId) throws ProductException {
+    public ResponseEntity<Product> findProductById(@PathVariable Long productId) throws GlobalExceptionHandler {
         Product res = productService.findProductById(productId);
         return new ResponseEntity<>(res, HttpStatus.ACCEPTED);
     }
 
     @GetMapping("/products/category/{category}")
-    public ResponseEntity<List<Product>> findProductsByCategory(@PathVariable String category) throws ProductException {
+    public ResponseEntity<List<Product>> findProductsByCategory(@PathVariable String category) throws GlobalExceptionHandler {
         List<Product> products = productService.findAllProductsByFilter(category, null, null, 
             null, null, null, null, null, 0, Integer.MAX_VALUE).getContent();
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
     @GetMapping("/products/search")
-    public ResponseEntity<List<Product>> searchProducts(@RequestParam String keyword) throws ProductException {
+    public ResponseEntity<List<Product>> searchProducts(@RequestParam String keyword) throws GlobalExceptionHandler {
         List<Product> products = productService.searchProducts(keyword);
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
     @GetMapping("/products/featured")
-    public ResponseEntity<List<Product>> getFeaturedProducts() throws ProductException {
+    public ResponseEntity<List<Product>> getFeaturedProducts() throws GlobalExceptionHandler {
         List<Product> products = productService.getFeaturedProducts();
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
