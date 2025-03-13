@@ -1,6 +1,6 @@
 package com.ecommerce.controller;
 
-import com.ecommerce.exception.PaymentException;
+import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.model.PaymentDetail;
 import com.ecommerce.service.PaymentService;
 import com.ecommerce.service.UserService;
@@ -22,26 +22,26 @@ public class PaymentController {
 
     @PostMapping("/create")
     public ResponseEntity<PaymentDetail> createPayment(@RequestHeader("Authorization") String jwt,
-            @RequestBody @Valid PaymentDetail paymentDetail) throws PaymentException {
+            @RequestBody @Valid PaymentDetail paymentDetail) throws GlobalExceptionHandler {
         PaymentDetail payment = paymentService.createPayment(paymentDetail);
         return new ResponseEntity<>(payment, HttpStatus.CREATED);
     }
 
     @GetMapping("/{paymentId}")
-    public ResponseEntity<PaymentDetail> getPaymentById(@PathVariable Long paymentId) throws PaymentException {
+    public ResponseEntity<PaymentDetail> getPaymentById(@PathVariable Long paymentId) throws GlobalExceptionHandler {
         PaymentDetail payment = paymentService.getPaymentById(paymentId);
         return new ResponseEntity<>(payment, HttpStatus.OK);
     }
 
     @PutMapping("/{paymentId}/update")
     public ResponseEntity<PaymentDetail> updatePayment(@PathVariable Long paymentId,
-            @RequestBody @Valid PaymentDetail paymentDetail) throws PaymentException {
+            @RequestBody @Valid PaymentDetail paymentDetail) throws GlobalExceptionHandler {
         PaymentDetail payment = paymentService.updatePayment(paymentId, paymentDetail);
         return new ResponseEntity<>(payment, HttpStatus.OK);
     }
 
     @DeleteMapping("/{paymentId}/delete")
-    public ResponseEntity<Void> deletePayment(@PathVariable Long paymentId) throws PaymentException {
+    public ResponseEntity<Void> deletePayment(@PathVariable Long paymentId) throws GlobalExceptionHandler {
         paymentService.deletePayment(paymentId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }

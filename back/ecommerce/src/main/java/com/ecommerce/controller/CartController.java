@@ -1,5 +1,6 @@
 package com.ecommerce.controller;
 
+import com.ecommerce.DTO.CartDTO;
 import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.model.Cart;
 import com.ecommerce.model.User;
@@ -22,21 +23,55 @@ public class CartController {
     private UserService userService;
 
     @GetMapping("/")
-    public ResponseEntity<Cart> findUserCart(@RequestHeader("Authorization") String jwt) throws GlobalExceptionHandler {
+    public ResponseEntity<CartDTO> findUserCart(@RequestHeader("Authorization") String jwt) throws GlobalExceptionHandler {
         User user = userService.findUserByJwt(jwt);
         Cart cart = cartService.findUserCart(user.getId());
-        return new ResponseEntity<Cart>(cart, HttpStatus.OK);
+        CartDTO cartDTO = new CartDTO(cart);
+        return new ResponseEntity<>(cartDTO, HttpStatus.OK);
     }
 
-    @PutMapping("/add")
-    public ResponseEntity<ApiResponse> addItemToCart(@RequestHeader("Authorization") String jwt, @RequestBody AddItemRequest addItemRequest) throws GlobalExceptionHandler {
+    @PostMapping("/add")
+    public ResponseEntity<ApiResponse> addItemToCart(@RequestHeader("Authorization") String jwt, 
+            @RequestBody AddItemRequest req) throws GlobalExceptionHandler {
         User user = userService.findUserByJwt(jwt);
-        cartService.addCartItem(user.getId(), addItemRequest);
+        cartService.addCartItem(user.getId(), req);
 
         ApiResponse res = new ApiResponse();
         res.setMessage("Item added to cart successfully");
         res.setStatus(true);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
 
-        return new ResponseEntity<>(res, HttpStatus.CREATED);
+    @PutMapping("/update/{itemId}")
+    public ResponseEntity<CartDTO> updateCartItem(@RequestHeader("Authorization") String jwt,
+            @PathVariable Long itemId, @RequestBody AddItemRequest req) throws GlobalExceptionHandler {
+        User user = userService.findUserByJwt(jwt);
+        Cart cart = cartService.updateCartItem(user.getId(), itemId, req);
+        CartDTO cartDTO = new CartDTO(cart);
+        return new ResponseEntity<>(cartDTO, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/remove/{itemId}")
+    public ResponseEntity<ApiResponse> removeCartItem(@RequestHeader("Authorization") String jwt,
+            @PathVariable Long itemId) throws GlobalExceptionHandler {
+        User user = userService.findUserByJwt(jwt);
+        cartService.removeCartItem(user.getId(), itemId);
+        
+        ApiResponse res = new ApiResponse();
+        res.setMessage("Item removed from cart successfully");
+        res.setStatus(true);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/clear")
+    public ResponseEntity<ApiResponse> clearCart(@RequestHeader("Authorization") String jwt) 
+            throws GlobalExceptionHandler {
+        User user = userService.findUserByJwt(jwt);
+        cartService.clearCart(user.getId());
+        
+        ApiResponse res = new ApiResponse();
+        res.setMessage("Cart cleared successfully");
+        res.setStatus(true);
+        return new ResponseEntity<>(res, HttpStatus.OK);
     }
 }

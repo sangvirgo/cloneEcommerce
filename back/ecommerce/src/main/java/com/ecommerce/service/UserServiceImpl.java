@@ -2,7 +2,7 @@ package com.ecommerce.service;
 
 import com.ecommerce.DTO.UserDTO;
 import com.ecommerce.config.JwtProvider;
-import com.ecommerce.exception.UserException;
+import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.model.User;
 import com.ecommerce.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -20,32 +20,38 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findUserById(Long id) throws UserException {
+    public User findUserById(Long id) throws GlobalExceptionHandler {
         Optional<User> user = userRepository.findById(id);
         if(user.isPresent()){
             return user.get();
         }
-        throw new UserException("User not found", "404");
+        throw new GlobalExceptionHandler("User not found", "USER_NOT_FOUND");
     }
 
     @Override
-    public UserDTO findUserProfileByJwt(String jwt) throws UserException {
+    public UserDTO findUserProfileByJwt(String jwt) throws GlobalExceptionHandler {
+        if (jwt != null && jwt.startsWith("Bearer ")) {
+            jwt = jwt.substring(7); // Remove "Bearer " prefix
+        }
         String email = jwtProvider.getEmailFromToken(jwt);
         User user = userRepository.findByEmail(email);
 
         if(user == null) {
-            throw new UserException("User not found " + email, "404");
+            throw new GlobalExceptionHandler("User not found " + email, "USER_NOT_FOUND");
         }
         return new UserDTO(user);
     }
 
     @Override
-    public User findUserByJwt(String jwt) throws UserException {
+    public User findUserByJwt(String jwt) throws GlobalExceptionHandler {
+        if (jwt != null && jwt.startsWith("Bearer ")) {
+            jwt = jwt.substring(7); // Remove "Bearer " prefix
+        }
         String email = jwtProvider.getEmailFromToken(jwt);
         User user = userRepository.findByEmail(email);
 
         if(user == null) {
-            throw new UserException("User not found " + email, "404");
+            throw new GlobalExceptionHandler("User not found " + email, "USER_NOT_FOUND");
         }
         return user;
     }

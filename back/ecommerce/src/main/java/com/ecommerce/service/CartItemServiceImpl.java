@@ -1,6 +1,6 @@
 package com.ecommerce.service;
 
-import com.ecommerce.exception.CartItemException;
+import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.model.*;
 import com.ecommerce.repository.CartItemRepository;
@@ -22,42 +22,42 @@ public class CartItemServiceImpl implements CartItemService {
     }
 
     @Override
-    public CartItem addCartItem(CartItem cartItem) throws CartItemException {
+    public CartItem addCartItem(CartItem cartItem) throws GlobalExceptionHandler {
         try {
             return cartItemRepository.save(cartItem);
         } catch (Exception e) {
-            throw new CartItemException("Error adding cart item: " + e.getMessage(), "CART_ITEM_ADD_ERROR");
+            throw new GlobalExceptionHandler("Error adding cart item: " + e.getMessage(), "CART_ITEM_ADD_ERROR");
         }
     }
 
     @Override
-    public CartItem updateCartItem(Long cartItemId, CartItem cartItem) throws CartItemException {
+    public CartItem updateCartItem(Long cartItemId, CartItem cartItem) throws GlobalExceptionHandler {
         CartItem existingItem = getCartItemById(cartItemId);
         try {
             cartItem.setId(cartItemId);
             return cartItemRepository.save(cartItem);
         } catch (Exception e) {
-            throw new CartItemException("Error updating cart item: " + e.getMessage(), "CART_ITEM_UPDATE_ERROR");
+            throw new GlobalExceptionHandler("Error updating cart item: " + e.getMessage(), "CART_ITEM_UPDATE_ERROR");
         }
     }
 
     @Override
-    public void deleteCartItem(Long cartItemId) throws CartItemException {
+    public void deleteCartItem(Long cartItemId) throws GlobalExceptionHandler {
         try {
             cartItemRepository.deleteById(cartItemId);
         } catch (Exception e) {
-            throw new CartItemException("Error deleting cart item: " + e.getMessage(), "CART_ITEM_DELETE_ERROR");
+            throw new GlobalExceptionHandler("Error deleting cart item: " + e.getMessage(), "CART_ITEM_DELETE_ERROR");
         }
     }
 
     @Override
-    public CartItem getCartItemById(Long cartItemId) throws CartItemException {
+    public CartItem getCartItemById(Long cartItemId) throws GlobalExceptionHandler {
         return cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new CartItemException("Cart item not found with id: " + cartItemId, "CART_ITEM_NOT_FOUND"));
+                .orElseThrow(() -> new GlobalExceptionHandler("Cart item not found with id: " + cartItemId, "CART_ITEM_NOT_FOUND"));
     }
 
     @Override
-    public boolean isCartItemExist(Long cartId, Long productId, String size) throws CartItemException {
+    public boolean isCartItemExist(Long cartId, Long productId, String size) throws GlobalExceptionHandler {
         return cartItemRepository.existsByCartIdAndProductIdAndSize(cartId, productId, size);
     }
 
@@ -72,7 +72,7 @@ public class CartItemServiceImpl implements CartItemService {
             CartItem existingItem = getCartItemById(id);
             cartItem.setId(id);
             return cartItemRepository.save(cartItem);
-        } catch (CartItemException e) {
+        } catch (GlobalExceptionHandler e) {
             throw new GlobalExceptionHandler(e.getMessage(), e.getCode());
         } catch (Exception e) {
             throw new GlobalExceptionHandler("Error updating cart item: " + e.getMessage());
@@ -101,7 +101,7 @@ public class CartItemServiceImpl implements CartItemService {
     public CartItem findCartItemById(Long cartItemId) throws GlobalExceptionHandler {
         try {
             return getCartItemById(cartItemId);
-        } catch (CartItemException e) {
+        } catch (GlobalExceptionHandler e) {
             throw new GlobalExceptionHandler(e.getMessage(), e.getCode());
         }
     }

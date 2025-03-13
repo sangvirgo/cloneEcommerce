@@ -1,13 +1,16 @@
 package com.ecommerce.controller;
 
-import com.ecommerce.exception.OrderException;
+import com.ecommerce.DTO.OrderDTO;
+import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.model.*;
 import com.ecommerce.service.*;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -20,21 +23,26 @@ public class OrderController {
     private UserService userService;
 
     @PostMapping("/")
-    public ResponseEntity<Order> createOrder(@RequestHeader("Authorization") String jwt, @RequestBody Address address) throws OrderException {
+    public ResponseEntity<OrderDTO> createOrder(@RequestHeader("Authorization") String jwt, @Valid @RequestBody Address address) throws GlobalExceptionHandler {
         User user = userService.findUserByJwt(jwt);
         Order order = orderService.placeOrder(address, user);
-        return new ResponseEntity<>(order, HttpStatus.CREATED);
+        OrderDTO orderDTO = new OrderDTO(order);
+        return new ResponseEntity<>(orderDTO, HttpStatus.CREATED);
     }
 
     @GetMapping("/user")
-    public ResponseEntity<List<Order>> userOrderHistory(@RequestHeader("Authorization") String jwt) throws OrderException {
+    public ResponseEntity<List<OrderDTO>> userOrderHistory(@RequestHeader("Authorization") String jwt) throws GlobalExceptionHandler {
         User user = userService.findUserByJwt(jwt);
         List<Order> orders = orderService.userOrderHistory(user.getId());
-        return new ResponseEntity<>(orders, HttpStatus.OK);
+        List<OrderDTO> orderDTOs = new ArrayList<>();
+        for (Order order : orders) {
+            orderDTOs.add(new OrderDTO(order));
+        }
+        return new ResponseEntity<>(orderDTOs, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Order> findOrderById(@PathVariable("id") Long orderId) throws OrderException {
+    public ResponseEntity<Order> findOrderById(@PathVariable("id") Long orderId) throws GlobalExceptionHandler {
         Order order = orderService.findOrderById(orderId);
         return new ResponseEntity<>(order, HttpStatus.OK);
     }

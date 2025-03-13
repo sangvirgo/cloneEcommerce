@@ -1,6 +1,6 @@
 package com.ecommerce.controller;
 
-import com.ecommerce.exception.ProductException;
+import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.model.Product;
 import com.ecommerce.request.CreateProductRequest;
 import com.ecommerce.response.ApiResponse;
@@ -20,13 +20,13 @@ public class AdminProductController {
     private ProductService productService;
 
     @PostMapping("/")
-    public ResponseEntity<Product> createProduct(@RequestBody CreateProductRequest createProductRequest) throws ProductException {
+    public ResponseEntity<Product> createProduct(@RequestBody CreateProductRequest createProductRequest) throws GlobalExceptionHandler {
         Product product = productService.createProduct(createProductRequest);
         return new ResponseEntity<>(product, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{productId}/delete")
-    public ResponseEntity<ApiResponse> deleteProduct(@PathVariable Long productId) throws ProductException {
+    public ResponseEntity<ApiResponse> deleteProduct(@PathVariable Long productId) throws GlobalExceptionHandler {
         productService.deleteProduct(productId);
 
         ApiResponse res = new ApiResponse();
@@ -36,19 +36,19 @@ public class AdminProductController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<Product>> findAllProducts() throws ProductException {
+    public ResponseEntity<List<Product>> findAllProducts() throws GlobalExceptionHandler {
         List<Product> p = productService.findAllProducts();
         return new ResponseEntity<>(p, HttpStatus.ACCEPTED);
     }
 
     @PutMapping("/{productId}/update")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long productId, @RequestBody Product product) throws ProductException {
+    public ResponseEntity<Product> updateProduct(@PathVariable Long productId, @RequestBody Product product) throws GlobalExceptionHandler {
         Product p = productService.updateProduct(productId, product);
         return new ResponseEntity<>(p, HttpStatus.OK);
     }
 
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse> createProduct(@RequestBody CreateProductRequest[] createProductRequests) throws ProductException {
+    public ResponseEntity<ApiResponse> createProduct(@RequestBody CreateProductRequest[] createProductRequests) throws GlobalExceptionHandler {
         for(CreateProductRequest temp: createProductRequests) {
             productService.createProduct(temp);
         }

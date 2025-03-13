@@ -2,11 +2,12 @@ package com.ecommerce.service;
 
 import com.ecommerce.enums.OrderStatus;
 import com.ecommerce.enums.PaymentStatus;
-import com.ecommerce.exception.OrderException;
+import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.model.*;
 import com.ecommerce.repository.CartRepository;
 import com.ecommerce.repository.OrderRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,86 +29,87 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Order findOrderById(Long orderId) throws OrderException {
+    public Order findOrderById(Long orderId) throws GlobalExceptionHandler {
         return orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderException("Không tìm thấy đơn hàng với ID: " + orderId));
+                .orElseThrow(() -> new GlobalExceptionHandler("Không tìm thấy đơn hàng với ID: " + orderId, "ORDER_ERROR"));
     }
 
     @Override
-    public List<Order> userOrderHistory(Long userId) throws OrderException {
+    public List<Order> userOrderHistory(Long userId) throws GlobalExceptionHandler {
         List<Order> orders = orderRepository.findByUserId(userId);
         if (orders.isEmpty()) {
-            throw new OrderException("Không tìm thấy lịch sử đơn hàng cho người dùng: " + userId);
+            throw new GlobalExceptionHandler("Không tìm thấy lịch sử đơn hàng cho người dùng: " + userId, "ORDER_ERROR");
         }
         return orders;
     }
 
     @Override
-    public Order placeOrder(Address address, User user) throws OrderException {
+    @Transactional
+    public Order placeOrder(Address address, User user) throws GlobalExceptionHandler {
         Cart cart = cartRepository.findByUserId(user.getId());
         if (cart == null || cart.getCartItems().isEmpty()) {
-            throw new OrderException("Giỏ hàng trống");
+            throw new GlobalExceptionHandler("Giỏ hàng trống", "ORDER_ERROR");
         }
 
-        try {
-            // Tính toán lại tổng giá trị giỏ hàng
-            cart = cartService.findUserCart(user.getId());
-            
-            Order order = new Order();
-            order.setUser(user);
-            order.setOrderDate(LocalDateTime.now());
-            order.setShippingAddress(address);
-            order.setOrderStatus(OrderStatus.PENDING);
-            order.setTotalAmount(cart.getTotalAmount());
-            order.setTotalItems(cart.getTotalItems());
-            order.setPaymentStatus(PaymentStatus.PENDING);
-            order.setDiscount(cart.getDiscount());
+        // Tính toán lại tổng giá trị giỏ hàng
+        cart = cartService.findUserCart(user.getId());
 
-            // Cập nhật số lượng sản phẩm
-            for (CartItem item : cart.getCartItems()) {
-                Product product = item.getProduct();
-                if (product.getQuantity() < item.getQuantity()) {
-                    throw new OrderException("Sản phẩm " + product.getTitle() + " không đủ số lượng trong kho");
-                }
-                product.setQuantity(product.getQuantity() - item.getQuantity());
-                productService.updateProduct(product.getId(), product);
+        Order order = new Order();
+        order.setUser(user);
+        order.setOrderDate(LocalDateTime.now());
+
+        // Thiết lập user cho address trước khi gán vào order
+        address.setUser(user); // Thêm dòng này
+        order.setShippingAddress(address);
+
+        order.setOrderStatus(OrderStatus.PENDING);
+        order.setTotalAmount(cart.getTotalAmount());
+        order.setTotalItems(cart.getTotalItems());
+        order.setPaymentStatus(PaymentStatus.PENDING);
+        order.setDiscount(cart.getDiscount());
+
+        // Cập nhật số lượng sản phẩm
+        for (CartItem item : cart.getCartItems()) {
+            Product product = item.getProduct();
+            if (product.getQuantity() < item.getQuantity()) {
+                throw new GlobalExceptionHandler("Sản phẩm " + product.getTitle() + " không đủ số lượng trong kho", "ORDER_ERROR");
             }
-
-            // Xóa giỏ hàng
-            cart.getCartItems().clear();
-            cartRepository.save(cart);
-
-            return orderRepository.save(order);
-        } catch (Exception e) {
-            throw new OrderException("Lỗi khi đặt hàng: " + e.getMessage());
+            product.setQuantity(product.getQuantity() - item.getQuantity());
+            productService.updateProduct(product.getId(), product);
         }
+
+        // Xóa giỏ hàng
+        cart.getCartItems().clear();
+        cartRepository.save(cart);
+
+        return orderRepository.save(order);
     }
 
     @Override
-    public Order confirmedOrder(Long orderId) throws OrderException {
+    public Order confirmedOrder(Long orderId) throws GlobalExceptionHandler {
         Order order = findOrderById(orderId);
         if (order.getOrderStatus() != OrderStatus.PENDING) {
-            throw new OrderException("Đơn hàng không thể xác nhận ở trạng thái hiện tại");
+            throw new GlobalExceptionHandler("Đơn hàng không thể xác nhận ở trạng thái hiện tại", "ORDER_ERROR");
         }
         order.setOrderStatus(OrderStatus.CONFIRMED);
         return orderRepository.save(order);
     }
 
     @Override
-    public Order shippedOrder(Long orderId) throws OrderException {
+    public Order shippedOrder(Long orderId) throws GlobalExceptionHandler {
         Order order = findOrderById(orderId);
         if (order.getOrderStatus() != OrderStatus.CONFIRMED) {
-            throw new OrderException("Đơn hàng phải được xác nhận trước khi gửi");
+            throw new GlobalExceptionHandler("Đơn hàng phải được xác nhận trước khi gửi", "ORDER_ERROR");
         }
         order.setOrderStatus(OrderStatus.SHIPPED);
         return orderRepository.save(order);
     }
 
     @Override
-    public Order deliveredOrder(Long orderId) throws OrderException {
+    public Order deliveredOrder(Long orderId) throws GlobalExceptionHandler {
         Order order = findOrderById(orderId);
         if (order.getOrderStatus() != OrderStatus.SHIPPED) {
-            throw new OrderException("Đơn hàng phải được gửi trước khi giao");
+            throw new GlobalExceptionHandler("Đơn hàng phải được gửi trước khi giao", "ORDER_ERROR");
         }
         order.setOrderStatus(OrderStatus.DELIVERED);
         order.setPaymentStatus(PaymentStatus.COMPLETED);
@@ -115,10 +117,10 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Order cancelOrder(Long orderId) throws OrderException {
+    public Order cancelOrder(Long orderId) throws GlobalExceptionHandler {
         Order order = findOrderById(orderId);
         if (order.getOrderStatus() == OrderStatus.DELIVERED) {
-            throw new OrderException("Không thể hủy đơn hàng đã giao");
+            throw new GlobalExceptionHandler("Không thể hủy đơn hàng đã giao", "ORDER_ERROR");
         }
         order.setOrderStatus(OrderStatus.CANCELLED);
         order.setPaymentStatus(PaymentStatus.REFUNDED);
@@ -126,19 +128,19 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<Order> getAllOrders() throws OrderException {
+    public List<Order> getAllOrders() throws GlobalExceptionHandler {
         List<Order> orders = orderRepository.findAll();
         if (orders.isEmpty()) {
-            throw new OrderException("Không có đơn hàng nào");
+            throw new GlobalExceptionHandler("Không có đơn hàng nào", "ORDER_ERROR");
         }
         return orders;
     }
 
     @Override
-    public void deleteOrder(Long orderId) throws OrderException {
+    public void deleteOrder(Long orderId) throws GlobalExceptionHandler {
         Order order = findOrderById(orderId);
         if (order.getOrderStatus() != OrderStatus.CANCELLED) {
-            throw new OrderException("Chỉ có thể xóa đơn hàng đã hủy");
+            throw new GlobalExceptionHandler("Chỉ có thể xóa đơn hàng đã hủy", "ORDER_ERROR");
         }
         orderRepository.delete(order);
     }
