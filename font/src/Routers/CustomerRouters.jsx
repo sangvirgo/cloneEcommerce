@@ -18,6 +18,8 @@ const CustomerRouters = () => {
         </div>
 
         <Routes>
+            <Route path="/sign-up" element={<HomePage />} />
+            <Route path="/sign-in" element={<HomePage />} />
             <Route path="/" element={<HomePage />} />
             <Route path="/cart" element={<Cart/>} />
             <Route path="/:category/:section/:item" element={<Product/>} />

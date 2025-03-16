@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import {
   Dialog,
   DialogBackdrop,
@@ -148,22 +148,34 @@ const navigation = {
 
 export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [close, setClose] = useState(false);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
-  const handleClose = () => {
-    setClose(!close);
-  }
+  useEffect(() => {
+    console.log("open state:", open);
+  }, [open]);
 
-  const handleOpen = () => {
+  const handleOpen = (e, isSignUp = false) => {
+    e.preventDefault();
+    console.log("open modal triggered");
     setOpen(true);
-  }
+    if (isSignUp) {
+      navigate('/sign-up');
+    } else {
+      navigate('/sign-in');
+    }
+    console.log("open state after setOpen:", true);
+  };
 
-  // Hàm xử lý điều hướng khi nhấp vào các mục chính (Women, Men, Company, Stores)
+  const handleClose = () => {
+    console.log("close modal triggered");
+    setOpen(false);
+    console.log("open state after setClose:", false);
+  };
+
   const handleNavigationClick = (path) => {
     navigate(`/${path.toLowerCase()}`);
-    setMobileMenuOpen(false); // Đóng menu mobile nếu đang mở
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -281,19 +293,6 @@ export default function Navigation() {
                   </a>
                 </div>
               ))}
-            </div>
-
-            <div className="space-y-6 border-t border-gray-200 px-4 py-6">
-              <div className="flow-root">
-                <a href="#" className="-m-2 block p-2 font-medium text-gray-900" onClick={handleOpen}>
-                  Sign in
-                </a>
-              </div>
-              <div className="flow-root">
-                <a href="#" className="-m-2 block p-2 font-medium text-gray-900">
-                  Create account
-                </a>
-              </div>
             </div>
 
             <div className="border-t border-gray-200 px-4 py-6">
@@ -446,12 +445,12 @@ export default function Navigation() {
 
               <div className="ml-auto flex items-center">
                 <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:space-x-6">
-                  <a href="#" className="text-sm font-medium text-gray-700 hover:text-gray-800">
+                  <a href="" className="text-sm font-medium text-gray-700 hover:text-gray-800" onClick={(e) => handleOpen(e, false)}>
                     Sign in
                   </a>
                   <span aria-hidden="true" className="h-6 w-px bg-gray-200" />
-                  <a href="#" className="text-sm font-medium text-gray-700 hover:text-gray-800">
-                    Create account
+                  <a href="" className="text-sm font-medium text-gray-700 hover:text-gray-800" onClick={(e) => handleOpen(e, true)}>
+                    Sign up
                   </a>
                 </div>
 

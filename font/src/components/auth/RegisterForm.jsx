@@ -17,8 +17,11 @@ import {
 } from "@mui/material"
 import Visibility from "@mui/icons-material/Visibility"
 import VisibilityOff from "@mui/icons-material/VisibilityOff"
+import { useDispatch } from "react-redux"
 
 function RegisterForm() {
+  const dispatch = useDispatch()
+
   // Form state
   const [formData, setFormData] = useState({
     firstName: "",
