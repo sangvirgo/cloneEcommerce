@@ -47,7 +47,8 @@ Quan trọng khi làm việc với JWT, cookies hoặc request từ frontend kh�
         CorsConfiguration cfg = new CorsConfiguration();
         cfg.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",
-                "http://localhost:4200"
+                "http://localhost:4200",
+                "http://localhost:5173"
         ));
         cfg.setAllowedMethods(Collections.singletonList("*"));
         cfg.setAllowCredentials(true);

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import GitHub from "@mui/icons-material/GitHub"
 import Google from "@mui/icons-material/Google"
 import {
@@ -17,10 +17,19 @@ import {
 } from "@mui/material"
 import Visibility from "@mui/icons-material/Visibility"
 import VisibilityOff from "@mui/icons-material/VisibilityOff"
-import { useDispatch } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
+import { getUser, register } from "../../State/Auth/Action"
 
 function RegisterForm() {
   const dispatch = useDispatch()
+  const jwt=localStorage.getItem('jwt')
+  const {auth} = useSelector(store => store)
+
+  useEffect(()=> {
+    if(jwt) {
+      dispatch(getUser())
+    }
+  }, [jwt, auth.jwt])
 
   // Form state
   const [formData, setFormData] = useState({
@@ -28,7 +37,7 @@ function RegisterForm() {
     lastName: "",
     email: "",
     password: "",
-    confirmPassword: "",
+    // confirmPassword: "",
   })
 
   // Error state
@@ -113,22 +122,12 @@ function RegisterForm() {
     if (validateForm()) {
       setIsSubmitting(true)
 
-      // const data = new FormData(e.currentTarget)
-
-      // const userData= {
-      //   firstName: data.get("firstName"),
-      //   lastName: data.get("lastName"),
-      //   email: data.get("email"),
-      //   password: data.get("password"),
-      // }
-
-
-      // Simulate API call
-      console.log("Form submitted:", formData)
+      const { confirmPassword, ...userData } = formData;
+      console.log("Form submitted:", userData);
+      dispatch(register(userData))
 
       setTimeout(() => {
         setIsSubmitting(false)
-        // You would typically redirect the user or show a success message here
       }, 100)
     }
   }
