@@ -1,4 +1,4 @@
-import { GET_USER_REQUEST, GET_USER_SUCCESS, GET_USER_FAILURE, LOGIN_FAILURE, LOGIN_SUCCESS, LOGOUT, REGISTER_FAILURE, REGISTER_REQUEST, REGISTER_SUCCESS } from "./ActionType"
+import { GET_USER_REQUEST, GET_USER_SUCCESS, GET_USER_FAILURE, LOGIN_FAILURE, LOGIN_REQUEST, LOGIN_SUCCESS, LOGOUT, REGISTER_FAILURE, REGISTER_REQUEST, REGISTER_SUCCESS } from "./ActionType"
 
 const initialState = {
     user: null,
@@ -11,7 +11,7 @@ export const authReducer = (state = initialState, action) => {
 
     switch(action.type) {
         case REGISTER_REQUEST:
-        case REGISTER_SUCCESS:
+        case LOGIN_REQUEST:
         case GET_USER_REQUEST:
             return {
                 ...state,
@@ -32,7 +32,7 @@ export const authReducer = (state = initialState, action) => {
                 ...state,
                 isLoading: false,
                 error: null,
-                jwt: action.payload
+                user: action.payload
             }
 
         case REGISTER_FAILURE:
@@ -45,11 +45,9 @@ export const authReducer = (state = initialState, action) => {
             }
 
         case LOGOUT:
-            return {
-                ...initialState,
-            }
+            return initialState;
+            
         default:
             return state;
     }
-
 }

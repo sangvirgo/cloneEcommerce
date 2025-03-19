@@ -19,10 +19,12 @@ import {
   ShoppingBagIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@mui/material';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { Avatar, Button, Menu, MenuItem } from '@mui/material';
 import AuthModal from '../auth/AuthModal';
-
+import { deepPurple } from '@mui/material/colors';
+import { getUser, logout } from '../../State/Auth/Action';
 
 const navigation = {
   categories: [
@@ -149,29 +151,68 @@ const navigation = {
 export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [open, setOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const openMenu = Boolean(anchorEl);
   const navigate = useNavigate();
+  const auth = useSelector((store) => store.auth);
+  const dispatch = useDispatch();
+  const location = useLocation();
+  const jwt = localStorage.getItem('jwt');
 
   useEffect(() => {
-    console.log("open state:", open);
-  }, [open]);
+    if(jwt) {
+      dispatch(getUser(jwt))
+    }
+  }, [jwt, dispatch])
 
-  const handleOpen = (e, isSignUp = false) => {
-    e.preventDefault();
-    console.log("open modal triggered");
-    setOpen(true);
-    if (isSignUp) {
+  useEffect(() => {
+    if(auth.user) {
+      handleClose()
+    }
+  }, [auth.user])
+
+  console.log("Auth state:", auth);
+
+  const handleUserClick = (e) => {
+    setAnchorEl(e.currentTarget);
+  }
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  }
+
+  const handleLogout = () => {
+    handleCloseMenu();
+    dispatch(logout());
+  }
+
+  const handleOpen = (type) => {
+    if (type === 'signup') {
       navigate('/sign-up');
     } else {
       navigate('/sign-in');
     }
-    console.log("open state after setOpen:", true);
+    setTimeout(() => {
+      setOpen(true);
+    }, 100);
   };
 
   const handleClose = () => {
-    console.log("close modal triggered");
     setOpen(false);
-    console.log("open state after setClose:", false);
+    setTimeout(() => {
+      if (location.pathname === '/sign-up' || location.pathname === '/sign-in') {
+        navigate('/');
+      }
+    }, 100);
   };
+
+  useEffect(() => {
+    if (location.pathname === '/sign-up' || location.pathname === '/sign-in') {
+      setOpen(true);
+    } else {
+      setOpen(false);
+    }
+  }, [location.pathname]);
 
   const handleNavigationClick = (path) => {
     navigate(`/${path.toLowerCase()}`);
@@ -444,50 +485,104 @@ export default function Navigation() {
               </PopoverGroup>
 
               <div className="ml-auto flex items-center">
-                <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:space-x-6">
-                  <a href="" className="text-sm font-medium text-gray-700 hover:text-gray-800" onClick={(e) => handleOpen(e, false)}>
-                    Sign in
-                  </a>
-                  <span aria-hidden="true" className="h-6 w-px bg-gray-200" />
-                  <a href="" className="text-sm font-medium text-gray-700 hover:text-gray-800" onClick={(e) => handleOpen(e, true)}>
-                    Sign up
-                  </a>
-                </div>
+                {!auth.user ? (
+                  <>
+                    <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:space-x-6">
+                      <Button onClick={() => handleOpen('signin')} className="text-sm font-medium text-gray-700 hover:text-gray-800">
+                        Sign in
+                      </Button>
+                      <span aria-hidden="true" className="h-6 w-px bg-gray-200" />
+                      <Button onClick={() => handleOpen('signup')} className="text-sm font-medium text-gray-700 hover:text-gray-800">
+                        Sign up
+                      </Button>
+                    </div>
 
-                <div className="hidden lg:ml-8 lg:flex">
-                  <a href="#" className="flex items-center text-gray-700 hover:text-gray-800">
-                    <img
-                      alt=""
-                      src="https://tailwindui.com/plus-assets/img/flags/flag-canada.svg"
-                      className="block h-auto w-5 shrink-0"
-                    />
-                    <span className="ml-3 block text-sm font-medium">CAD</span>
-                    <span className="sr-only">, change currency</span>
-                  </a>
-                </div>
+                    <div className="hidden lg:ml-8 lg:flex">
+                      <a href="#" className="flex items-center text-gray-700 hover:text-gray-800">
+                        <img
+                          alt=""
+                          src="https://tailwindui.com/plus-assets/img/flags/flag-canada.svg"
+                          className="block h-auto w-5 shrink-0"
+                        />
+                        <span className="ml-3 block text-sm font-medium">CAD</span>
+                        <span className="sr-only">, change currency</span>
+                      </a>
+                    </div>
 
-                {/* Search */}
-                <div className="flex lg:ml-6">
-                  <a href="#" className="p-2 text-gray-400 hover:text-gray-500">
-                    <span className="sr-only">Search</span>
-                    <MagnifyingGlassIcon aria-hidden="true" className="size-6" />
-                  </a>
-                </div>
+                    {/* Search */}
+                    <div className="flex lg:ml-6">
+                      <a href="#" className="p-2 text-gray-400 hover:text-gray-500">
+                        <span className="sr-only">Search</span>
+                        <MagnifyingGlassIcon aria-hidden="true" className="size-6" />
+                      </a>
+                    </div>
 
-                {/* Cart */}
-                <div className="ml-4 flow-root lg:ml-6">
-                  <a href="#" className="group -m-2 flex items-center p-2">
+                    {/* Cart */}
+                    <div className="ml-4 flow-root lg:ml-6">
+                      <a href="#" className="group -m-2 flex items-center p-2">
+                        <Button onClick={()=>navigate("/account/order")} className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
+                        <ShoppingBagIcon
+                          aria-hidden="true"
+                          className="size-6 shrink-0 text-gray-400 group-hover:text-gray-500"
+                        />
+                          <p className='ml-2'>0</p>
+                        </Button>
+                        <span className="sr-only">items in cart, view bag</span>
+                      </a>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center space-x-4">
+                    {/* Search */}
+                    <div className="flex lg:ml-6">
+                      <a href="#" className="p-2 text-gray-400 hover:text-gray-500">
+                        <span className="sr-only">Search</span>
+                        <MagnifyingGlassIcon aria-hidden="true" className="size-6" />
+                      </a>
+                    </div>
 
-                    <Button onClick={()=>navigate("/account/order")} className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
-                    <ShoppingBagIcon
-                      aria-hidden="true"
-                      className="size-6 shrink-0 text-gray-400 group-hover:text-gray-500"
-                    />
-                      <p className='ml-2'>0</p>
-                    </Button>
-                    <span className="sr-only">items in cart, view bag</span>
-                  </a>
-                </div>
+                    {/* Cart */}
+                    <div className="flow-root">
+                      <a href="#" className="group -m-2 flex items-center p-2">
+                        <Button onClick={()=>navigate("/account/order")} className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
+                        <ShoppingBagIcon
+                          aria-hidden="true"
+                          className="size-6 shrink-0 text-gray-400 group-hover:text-gray-500"
+                        />
+                          <p className='ml-2'>0</p>
+                        </Button>
+                      </a>
+                    </div>
+
+                    <Avatar
+                      className="text-white"
+                      onClick={handleUserClick}
+                      aria-controls={openMenu ? 'basic-menu' : undefined}
+                      aria-haspopup="true"
+                      aria-expanded={openMenu ? 'true' : undefined}
+                      alt={auth.user?.firstName}
+                      sx={{
+                        bgcolor: deepPurple[500],
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {auth.user?.firstName?.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Menu
+                      id="basic-menu"
+                      anchorEl={anchorEl}
+                      open={openMenu}
+                      onClose={handleCloseMenu}
+                      MenuListProps={{
+                        'aria-labelledby': 'basic-button',
+                      }}
+                    >
+                      <MenuItem onClick={() => {handleCloseMenu(); navigate('/account')}}>My account</MenuItem>
+                      <MenuItem onClick={() => {handleCloseMenu(); navigate('/account/order')}}>My orders</MenuItem>
+                      <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                    </Menu>
+                  </div>
+                )}
               </div>
             </div>
           </div>

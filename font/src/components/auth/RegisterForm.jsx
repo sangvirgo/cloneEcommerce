@@ -14,22 +14,45 @@ import {
   IconButton,
   InputAdornment,
   Stack,
+  Avatar,
+  Menu,
+  MenuItem,
 } from "@mui/material"
 import Visibility from "@mui/icons-material/Visibility"
 import VisibilityOff from "@mui/icons-material/VisibilityOff"
 import { useDispatch, useSelector } from "react-redux"
-import { getUser, register } from "../../State/Auth/Action"
+import { getUser, register, logout } from "../../State/Auth/Action"
 
-function RegisterForm() {
+function RegisterForm({ handleClose }) {
   const dispatch = useDispatch()
-  const jwt=localStorage.getItem('jwt')
-  const {auth} = useSelector(store => store)
+  const jwt = localStorage.getItem('jwt')
+  const { auth } = useSelector(store => store)
+  const [anchorEl, setAnchorEl] = useState(null)
 
-  useEffect(()=> {
+  useEffect(() => {
     if(jwt) {
-      dispatch(getUser())
+      dispatch(getUser(jwt))
     }
   }, [jwt, auth.jwt])
+
+  useEffect(() => {
+    if(auth.jwt) {
+      handleClose()
+    }
+  }, [auth.jwt, handleClose])
+
+  const handleMenu = (event) => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null)
+  }
+
+  const handleLogout = () => {
+    dispatch(logout())
+    handleCloseMenu()
+  }
 
   // Form state
   const [formData, setFormData] = useState({
@@ -37,11 +60,17 @@ function RegisterForm() {
     lastName: "",
     email: "",
     password: "",
-    // confirmPassword: "",
+    confirmPassword: "",
   })
 
   // Error state
-  const [errors, setErrors] = useState({})
+  const [errors, setErrors] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  })
 
   // Loading state
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -123,7 +152,6 @@ function RegisterForm() {
       setIsSubmitting(true)
 
       const { confirmPassword, ...userData } = formData;
-      console.log("Form submitted:", userData);
       dispatch(register(userData))
 
       setTimeout(() => {
@@ -144,8 +172,8 @@ function RegisterForm() {
   }
 
   return (
-    <Card sx={{ maxWidth: 450, width: "100%", mx: "auto", boxShadow: 3 }}>
-      <CardContent sx={{ p: 3 }}>
+    <Card sx={{ width: "100%", mx: "auto", boxShadow: 0 }}>
+      <CardContent sx={{ p: 2 }}>
         <Typography variant="h5" component="h1" gutterBottom align="center" fontWeight="bold">
           Create an Account
         </Typography>
@@ -190,7 +218,7 @@ function RegisterForm() {
           </Typography>
         </Box>
 
-        {/* Sign-up Form onSubmit={handleSubmit}*/ }
+        {/* Sign-up Form */}
         <form onSubmit={handleSubmit}>
           <Stack spacing={2.5}>
             {/* Full Name Field */}
@@ -203,7 +231,7 @@ function RegisterForm() {
               onChange={handleChange}
               error={!!errors.firstName}
               helperText={errors.firstName}
-              placeholder="John Doe"
+              placeholder="John"
             />
 
             {/* last name */}
@@ -216,7 +244,7 @@ function RegisterForm() {
               onChange={handleChange}
               error={!!errors.lastName}
               helperText={errors.lastName}
-              placeholder="John Doe"
+              placeholder="Doe"
             />
 
             {/* Email Field */}
@@ -314,4 +342,3 @@ function RegisterForm() {
 }
 
 export default RegisterForm
-

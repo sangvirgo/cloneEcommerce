@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Github from "@mui/icons-material/GitHub";
-import { Button, TextField, Card, CardContent, Typography } from "@mui/material";
+import { Button, TextField, Card, CardContent, Typography, Box, InputAdornment, IconButton } from "@mui/material";
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import PropTypes from "prop-types";
+import { useDispatch, useSelector } from "react-redux";
+import { login, getUser } from "../../State/Auth/Action";
+import { useNavigate } from "react-router-dom";
 
 // Component thay thế Link của Next.js
 const Link = ({ href, className, children }) => (
@@ -18,11 +23,28 @@ Link.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
-export default function LoginForm() {
+export default function LoginForm({ handleClose }) {
+  const dispatch = useDispatch();
+  const jwt = localStorage.getItem("jwt");
+  const auth = useSelector((store) => store.auth);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if(jwt) {
+      dispatch(getUser(jwt))
+    }
+  }, [jwt, auth.jwt])
+
+  useEffect(() => {
+    if(auth.jwt) {
+      handleClose()
+    }
+  }, [auth.jwt, handleClose])
 
   const [errors, setErrors] = useState({
     email: "",
@@ -49,9 +71,18 @@ export default function LoginForm() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
-      console.log(formData);
-      // Handle form submission logic here
+      dispatch(login(formData));
     }
+  };
+
+  const handleSignUpClick = (e) => {
+    e.preventDefault();
+    handleClose();
+    navigate('/sign-up');
+  };
+
+  const handleTogglePassword = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -87,15 +118,16 @@ export default function LoginForm() {
               fill="#EA4335"
             />
           </svg>
-          Continue with Google
+          Google
         </Button>
         </div>
 
         <div className="border shadow-md rounded-md border-gray-300">
         <Button fullWidth className="border" variant="" startIcon={<Github />} sx={{borderColor: "black"}}>
-          Continue with GitHub
+          GitHub
         </Button>
         </div>
+        
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -114,12 +146,25 @@ export default function LoginForm() {
             fullWidth
             required
             label="Password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             margin="normal"
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             error={!!errors.password}
             helperText={errors.password}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleTogglePassword}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
 
           <Button type="submit" fullWidth variant="contained" sx={{ mt: 2 }}>
@@ -129,9 +174,15 @@ export default function LoginForm() {
 
         <Typography variant="body2" align="center" sx={{ mt: 2 }}>
           <p>Dont have an account?</p>{" "}
-          <Link href="/sign-up" className="text-primary font-bold underline">
-            Sign Up Now
-          </Link>
+          <Typography
+            component="a"
+            href="/sign-up"
+            color="primary"
+            fontWeight="bold"
+            sx={{ textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
+          >
+            Sign Up
+          </Typography>
         </Typography>
       </CardContent>
     </Card>
