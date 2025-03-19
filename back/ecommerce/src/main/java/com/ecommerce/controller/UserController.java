@@ -5,6 +5,8 @@ import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.model.*;
 import com.ecommerce.repository.UserRepository;
 import com.ecommerce.response.UserProfileResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,27 +18,38 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+
     @Autowired
     private UserRepository userRepository;
 
     @GetMapping("/profile")
-    public ResponseEntity<UserProfileResponse> getUserProfile() {
+    public ResponseEntity<?> getUserProfile() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || authentication.getName() == null) {
-                throw new GlobalExceptionHandler("Authentication failed", "AUTH_ERROR");
+                logger.error("Authentication failed - auth object is null or name is null");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Authentication failed", "code", "AUTH_ERROR"));
             }
 
             String email = authentication.getName();
+            logger.info("Getting profile for user with email: {}", email);
+            
             User user = userRepository.findByEmail(email);
             if (user == null) {
-                throw new GlobalExceptionHandler("User not found", "USER_NOT_FOUND");
+                logger.error("User not found for email: {}", email);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "User not found for email: " + email, "code", "USER_NOT_FOUND"));
             }
 
+            logger.info("User found with ID: {}", user.getId());
+            
             // Kiểm tra danh sách địa chỉ, nếu null thì tạo danh sách rỗng
             List<AddressDTO> addressDTOS = new ArrayList<>();
             if (user.getAddress() != null) {
@@ -68,11 +81,13 @@ public class UserController {
             profileResponse.setCreatedAt(user.getCreatedAt());
             profileResponse.setOrders(orderDTOS);
 
+            logger.info("Successfully retrieved profile for user: {}", email);
             return ResponseEntity.ok(profileResponse);
-        } catch (GlobalExceptionHandler e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            logger.error("Error getting user profile: ", e);
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred: " + e.getMessage(), "code", "INTERNAL_ERROR"));
         }
     }
 

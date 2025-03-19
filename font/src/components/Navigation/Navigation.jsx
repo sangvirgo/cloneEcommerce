@@ -161,17 +161,27 @@ export default function Navigation() {
 
   useEffect(() => {
     if(jwt) {
+      console.log('Navigation - JWT found in localStorage:', jwt);
       dispatch(getUser(jwt))
     }
   }, [jwt, dispatch])
 
   useEffect(() => {
+    const token = localStorage.getItem('jwt');
+    if (token) {
+      console.log('Navigation - Component mounted, found JWT in localStorage');
+      dispatch(getUser(token));
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
     if(auth.user) {
+      console.log('Navigation - User loaded:', auth.user);
       handleClose()
     }
   }, [auth.user])
 
-  console.log("Auth state:", auth);
+  console.log("Auth state in Navigation:", auth);
 
   const handleUserClick = (e) => {
     setAnchorEl(e.currentTarget);
@@ -485,7 +495,7 @@ export default function Navigation() {
               </PopoverGroup>
 
               <div className="ml-auto flex items-center">
-                {!auth.user ? (
+                {!auth.user && !jwt ? (
                   <>
                     <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:space-x-6">
                       <Button onClick={() => handleOpen('signin')} className="text-sm font-medium text-gray-700 hover:text-gray-800">
@@ -560,13 +570,13 @@ export default function Navigation() {
                       aria-controls={openMenu ? 'basic-menu' : undefined}
                       aria-haspopup="true"
                       aria-expanded={openMenu ? 'true' : undefined}
-                      alt={auth.user?.firstName}
+                      alt={auth.user?.firstName || "User"}
                       sx={{
                         bgcolor: deepPurple[500],
                         cursor: 'pointer',
                       }}
                     >
-                      {auth.user?.firstName?.charAt(0).toUpperCase()}
+                      {auth.user?.firstName?.charAt(0).toUpperCase() || "U"}
                     </Avatar>
                     <Menu
                       id="basic-menu"
@@ -578,7 +588,6 @@ export default function Navigation() {
                       }}
                     >
                       <MenuItem onClick={() => {handleCloseMenu(); navigate('/account')}}>My account</MenuItem>
-                      <MenuItem onClick={() => {handleCloseMenu(); navigate('/account/order')}}>My orders</MenuItem>
                       <MenuItem onClick={handleLogout}>Logout</MenuItem>
                     </Menu>
                   </div>

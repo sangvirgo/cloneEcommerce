@@ -8,6 +8,7 @@ const initialState = {
 }
 
 export const authReducer = (state = initialState, action) => {
+    console.log("Auth Reducer: ", action.type, action.payload);
 
     switch(action.type) {
         case REGISTER_REQUEST:
@@ -37,11 +38,20 @@ export const authReducer = (state = initialState, action) => {
 
         case REGISTER_FAILURE:
         case LOGIN_FAILURE:
-        case GET_USER_FAILURE:
             return {
                 ...state,
                 isLoading: false,
                 error: action.payload
+            }
+            
+        case GET_USER_FAILURE:
+            // Nếu lỗi khi lấy thông tin người dùng, có thể token đã hết hạn
+            return {
+                ...state,
+                isLoading: false,
+                error: action.payload,
+                jwt: null,  // Xóa JWT khỏi state
+                user: null  // Xóa thông tin user khỏi state
             }
 
         case LOGOUT:

@@ -1,5 +1,7 @@
 package com.ecommerce.config;
 
+import com.ecommerce.service.CustomOAuth2UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -9,54 +11,57 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
 public class AppConfig {
 
+    private final JwtConstant jwtConstant;
+    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+    private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+    
+    // Không đặt CustomOAuth2UserService dưới dạng field injection
+    // private CustomOAuth2UserService customOAuth2UserService;
+
+    // Constructor injection
+    public AppConfig(JwtConstant jwtConstant,
+                    OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler,
+                    OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler) {
+        this.jwtConstant = jwtConstant;
+        this.oAuth2AuthenticationSuccessHandler = oAuth2AuthenticationSuccessHandler;
+        this.oAuth2AuthenticationFailureHandler = oAuth2AuthenticationFailureHandler;
+    }
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomOAuth2UserService customOAuth2UserService) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> {
-                auth.requestMatchers("/api/auth/**", "/oauth2/**").permitAll();
-                auth.anyRequest().authenticated();
-            })
-            .sessionManagement(session -> 
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .oauth2Login(oauth2 -> {
-                oauth2.userInfoEndpoint(userInfo -> 
-                    userInfo.userService(this.oauth2UserService()));
-                oauth2.successHandler(this.oauth2AuthenticationSuccessHandler());
-                oauth2.failureHandler(this.oauth2AuthenticationFailureHandler());
-            })
-            .httpBasic(Customizer.withDefaults());
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/**", "/auth/**", "/login/**", "/oauth2/**").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated())
+            .oauth2Login(oauth2 -> oauth2
+                .authorizationEndpoint(authorization -> authorization
+                    .baseUri("/oauth2/authorization"))
+                .redirectionEndpoint(redirection -> redirection
+                    .baseUri("/oauth2/callback/*"))
+                .userInfoEndpoint(userInfo -> userInfo
+                    .userService(customOAuth2UserService))
+                .successHandler(oAuth2AuthenticationSuccessHandler)
+                .failureHandler(oAuth2AuthenticationFailureHandler))
+            .addFilterBefore(new JwtValidator(jwtConstant), UsernamePasswordAuthenticationFilter.class)
+            .httpBasic(basic -> basic.disable());
 
         return http.build();
-    }
-
-    @Bean
-    public OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService() {
-        return new CustomOAuth2UserService();
-    }
-
-    @Bean
-    public AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler() {
-        return new OAuth2AuthenticationSuccessHandler();
-    }
-
-    @Bean
-    public AuthenticationFailureHandler oauth2AuthenticationFailureHandler() {
-        return new OAuth2AuthenticationFailureHandler();
     }
 
     @Bean
@@ -67,9 +72,12 @@ public class AppConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("*");
-        configuration.addAllowedMethod("*");
-        configuration.addAllowedHeader("*");
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://127.0.0.1:5173", "https://accounts.google.com"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Disposition", "Access-Control-Allow-Origin"));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

@@ -7,6 +7,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -26,6 +28,7 @@ import java.util.List;
 public class JwtValidator extends OncePerRequestFilter {
 
     private final SecretKey key;
+    private static final Logger logger = LoggerFactory.getLogger(JwtValidator.class);
 
     public JwtValidator(JwtConstant jwtConstant) {
         this.key = Keys.hmacShaKeyFor(jwtConstant.getSecretKey().getBytes(StandardCharsets.UTF_8));
@@ -35,39 +38,47 @@ public class JwtValidator extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        try {
+            String jwt = request.getHeader(JwtConstant.JWT_HEADER);
+            logger.debug("Received JWT header: {}", jwt);
 
-//        getHeader(JwtConstant.JWT_HEADER): Lấy token từ header Authorization.
-        String jwt=request.getHeader(JwtConstant.JWT_HEADER);
+            if(jwt!=null && jwt.startsWith("Bearer ")) {
+                try {
+                    jwt = jwt.substring(7);
+                    logger.debug("Processing JWT token: {}", jwt);
 
-//        startsWith("Bearer "): Kiểm tra token có prefix "Bearer ".
-        if(jwt!=null && jwt.startsWith("Bearer ")) {
-            try {
-                jwt=jwt.substring(7);
+                    Claims claims = Jwts.parser()
+                            .verifyWith(key)
+                            .build()
+                            .parseSignedClaims(jwt)
+                            .getPayload();
 
-//                Parse token: Xác thực token và lấy email, authorities.
-                Claims claims=Jwts.parser()
-                        .verifyWith(key)
-                        .build()
-                        .parseSignedClaims(jwt)
-                        .getPayload();
+                    String email = String.valueOf(claims.get("email"));
+                    logger.debug("Extracted email from JWT: {}", email);
+                    
+                    String authorities = String.valueOf(claims.get("authorities"));
+                    logger.debug("Extracted authorities from JWT: {}", authorities);
 
-                String email=String.valueOf(claims.get("email"));
-                String authorities = String.valueOf(claims.get("authorities"));
+                    List<GrantedAuthority> auths = AuthorityUtils.commaSeparatedStringToAuthorityList(authorities);
 
-//                AuthorityUtils.commaSeparatedStringToAuthorityList: Chuyển chuỗi authorities thành danh sách GrantedAuthority.
-                List<GrantedAuthority> auths= AuthorityUtils.commaSeparatedStringToAuthorityList(authorities);
-
-//                Tạo đối tượng Authentication và set vào SecurityContextHolder.
-                Authentication authentication=new UsernamePasswordAuthenticationToken(email, null, auths);
-
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            } catch (Exception e) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Invalid token: "+ e.getMessage());
-                return;
+                    Authentication authentication = new UsernamePasswordAuthenticationToken(email, null, auths);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    logger.debug("Authentication set in SecurityContext for email: {}", email);
+                } catch (Exception e) {
+                    logger.error("JWT validation error: {}", e.getMessage(), e);
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("Invalid token: " + e.getMessage());
+                    return;
+                }
+            } else {
+                logger.debug("No JWT token found or invalid format in request");
             }
+            filterChain.doFilter(request, response);
+        } catch (Exception e) {
+            logger.error("Unexpected error in JWT validation: {}", e.getMessage(), e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("Server error during authentication: " + e.getMessage());
         }
-        filterChain.doFilter(request, response);
     }
 
 }

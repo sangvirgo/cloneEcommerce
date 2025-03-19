@@ -24,6 +24,9 @@ Link.propTypes = {
 };
 
 export default function LoginForm({ handleClose }) {
+  LoginForm.propTypes = {
+    handleClose: PropTypes.func.isRequired,
+  };
   const dispatch = useDispatch();
   const jwt = localStorage.getItem("jwt");
   const auth = useSelector((store) => store.auth);
@@ -85,6 +88,11 @@ export default function LoginForm({ handleClose }) {
     setShowPassword(!showPassword);
   };
 
+  const handleGoogleLogin = () => {
+    console.log("Google login clicked - redirecting to Google OAuth2 endpoint");
+    window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+  };
+
   return (
     <Card sx={{ maxWidth: 400, mx: "auto", p: 3, boxShadow: 3 }}>
       <Typography variant="h5" gutterBottom>
@@ -99,7 +107,7 @@ export default function LoginForm({ handleClose }) {
         <div className="space-y-4">
 
         <div className="border shadow-md rounded-md border-gray-300">
-        <Button variant="outline" className="w-full border " onClick={() => {}}>
+        <Button variant="outline" className="w-full border " onClick={handleGoogleLogin}>
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -173,16 +181,12 @@ export default function LoginForm({ handleClose }) {
         </form>
 
         <Typography variant="body2" align="center" sx={{ mt: 2 }}>
-          <p>Dont have an account?</p>{" "}
-          <Typography
-            component="a"
-            href="/sign-up"
-            color="primary"
-            fontWeight="bold"
-            sx={{ textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
-          >
-            Sign Up
-          </Typography>
+          <Box component="span">
+            Dont have an account?{" "}
+            <Button onClick={handleSignUpClick} className="text-primary font-bold">
+              Sign Up Now
+            </Button>
+          </Box>
         </Typography>
       </CardContent>
     </Card>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import PropTypes from "prop-types"
 import GitHub from "@mui/icons-material/GitHub"
 import Google from "@mui/icons-material/Google"
 import {
@@ -22,12 +23,14 @@ import Visibility from "@mui/icons-material/Visibility"
 import VisibilityOff from "@mui/icons-material/VisibilityOff"
 import { useDispatch, useSelector } from "react-redux"
 import { getUser, register, logout } from "../../State/Auth/Action"
+import { useNavigate } from "react-router-dom"
 
 function RegisterForm({ handleClose }) {
   const dispatch = useDispatch()
   const jwt = localStorage.getItem('jwt')
   const { auth } = useSelector(store => store)
   const [anchorEl, setAnchorEl] = useState(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     if(jwt) {
@@ -162,14 +165,20 @@ function RegisterForm({ handleClose }) {
 
   // Handle social sign-ups
   const handleGoogleSignUp = () => {
-    console.log("Google sign-up clicked")
-    // Implement Google sign-up logic
+    console.log("Google sign-up clicked - redirecting to Google OAuth2 endpoint");
+    window.location.href = 'http://localhost:8080/oauth2/authorization/google';
   }
 
   const handleGitHubSignUp = () => {
     console.log("GitHub sign-up clicked")
     // Implement GitHub sign-up logic
   }
+
+  const handleSignInClick = (e) => {
+    e.preventDefault();
+    handleClose();
+    navigate('/sign-in');
+  };
 
   return (
     <Card sx={{ width: "100%", mx: "auto", boxShadow: 0 }}>
@@ -325,20 +334,19 @@ function RegisterForm({ handleClose }) {
 
         {/* Sign In Link */}
         <Typography variant="body2" align="center" sx={{ mt: 3 }}>
-          Already have an account?{" "}
-          <Typography
-            component="a"
-            href="/sign-in"
-            color="primary"
-            fontWeight="bold"
-            sx={{ textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
-          >
-            Sign In
-          </Typography>
+          <Box component="span">
+            Already have an account?{" "}
+            <Button onClick={handleSignInClick} className="text-primary font-bold">
+              Sign In Now
+            </Button>
+          </Box>
         </Typography>
       </CardContent>
     </Card>
   )
+}
+RegisterForm.propTypes = {
+  handleClose: PropTypes.func.isRequired,
 }
 
 export default RegisterForm

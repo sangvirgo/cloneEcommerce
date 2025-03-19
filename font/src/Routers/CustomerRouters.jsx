@@ -8,6 +8,7 @@ import ProductDetails from "../components/ProductDetails/ProductDetails"
 import Checkout from "../components/Checkout/Checkout"
 import Order from "../components/Order/Order"
 import OrderDetail from "../components/Order/OrderDetail"
+import OAuthRedirect from "../components/auth/OAuthRedirect"
 
 
 const CustomerRouters = () => {
@@ -27,6 +28,7 @@ const CustomerRouters = () => {
             <Route path="/checkout" element={<Checkout/>} />
             <Route path="/account/order" element={<Order/>} />
             <Route path="/checkout/order/:orderId" element={<OrderDetail/>} />
+            <Route path="/oauth2/redirect" element={<OAuthRedirect />} />
 
 
         </Routes>
