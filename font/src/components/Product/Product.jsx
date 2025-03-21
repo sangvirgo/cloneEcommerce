@@ -37,6 +37,16 @@ export default function Product() {
   const location = useLocation()
   const navigate = useNavigate()
 
+  const decodedQueryString=decodeURIComponent(location.search);
+  const searchParams = new URLSearchParams(decodedQueryString);
+  const colorValue=searchParams.get('color');
+  const sizeValue=searchParams.get('size');
+  const priceValue=searchParams.get('price');
+  const discountValue=searchParams.get('discount');
+  const sortValue=searchParams.get('sort');
+  const pageValue=searchParams.get('page') || 1;
+  const stockValue=searchParams.get('stock');
+
   // Initialize selected filters from URL on component mount
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search)

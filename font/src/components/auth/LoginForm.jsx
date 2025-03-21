@@ -89,9 +89,14 @@ export default function LoginForm({ handleClose }) {
   };
 
   const handleGoogleLogin = () => {
-    console.log("Google login clicked - redirecting to Google OAuth2 endpoint");
     window.location.href = 'http://localhost:8080/oauth2/authorization/google';
   };
+
+  const handleGitHubLogin = () => {
+    console.log("GitHub login clicked")
+    // Implement GitHub
+    window.location.href = 'http://localhost:8080/oauth2/authorization/github';
+  }
 
   return (
     <Card sx={{ maxWidth: 400, mx: "auto", p: 3, boxShadow: 3 }}>
@@ -131,7 +136,7 @@ export default function LoginForm({ handleClose }) {
         </div>
 
         <div className="border shadow-md rounded-md border-gray-300">
-        <Button fullWidth className="border" variant="" startIcon={<Github />} sx={{borderColor: "black"}}>
+        <Button fullWidth className="border" variant="" onClick={handleGitHubLogin} startIcon={<Github />} sx={{borderColor: "black"}}>
           GitHub
         </Button>
         </div>

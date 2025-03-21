@@ -172,6 +172,7 @@ function RegisterForm({ handleClose }) {
   const handleGitHubSignUp = () => {
     console.log("GitHub sign-up clicked")
     // Implement GitHub sign-up logic
+    window.location.href = 'http://localhost:8080/oauth2/authorization/github';
   }
 
   const handleSignInClick = (e) => {
