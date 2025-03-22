@@ -4,8 +4,8 @@ import {api} from '../../config/ApiConfig';
 export const findProducts = (reqData) => async (dispatch) => {
     dispatch({type: FIND_PRODUCT_REQUEST});
     const {
-        colors,
-        sizes,
+        colors= [],
+        sizes = [],
         minPrice,
         maxPrice,
         minDiscount,
@@ -17,7 +17,20 @@ export const findProducts = (reqData) => async (dispatch) => {
     } = reqData;
 
     try {
-        const { data } = await api.get(`/api/products?colors=${colors}&sizes=${sizes}&minPrice=${minPrice}&maxPrice=${maxPrice}&minDiscount=${minDiscount}&category=${category}&stock=${stock}&sort=${sort}&pageNumber=${pageNumber}&pageSize=${pageSize}`);
+        const { data } = await api.get('/api/products', {
+            params: {
+                colors: colors.join(','),
+                sizes: sizes.join(','),
+                minPrice,
+                maxPrice,
+                minDiscount,
+                category,
+                stock,
+                sort,
+                pageNumber,
+                pageSize
+            }
+        });
         dispatch({type: FIND_PRODUCT_SUCCESS, payload: data});
     } catch (error) {
         dispatch({type: FIND_PRODUCT_FAILURE, payload: error.message});

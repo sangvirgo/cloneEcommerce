@@ -1,6 +1,7 @@
 package com.ecommerce.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -129,12 +130,16 @@ public class ProductServiceImpl implements ProductService {
             Integer pageNumber, Integer pageSize) throws GlobalExceptionHandler {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         List<Product> products = productRepository.filterProducts(category, minPrice, maxPrice, minDiscount, sort);
+        
+        final List<String> finalColors = colors != null ? colors : new ArrayList<>();
+        final List<String> finalSizes = sizes != null ? sizes : new ArrayList<>();
 
-        if(!colors.isEmpty()) {
+        if(!finalColors.isEmpty()) {
             products = products.stream()
-                .filter(product -> colors.stream().anyMatch(c -> c.equalsIgnoreCase(product.getColor())))
+                .filter(product -> finalColors.stream().anyMatch(c -> c.equalsIgnoreCase(product.getColor())))
                 .collect(Collectors.toList());
         }
+
 
         if(stock != null) {
             if(stock.equals("in_stock")) {

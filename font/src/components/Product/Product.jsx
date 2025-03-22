@@ -52,33 +52,23 @@ export default function Product() {
   const pageValue=searchParams.get('page') || 1;
   const stockValue=searchParams.get('stock');
   const { item } = useParams()
+  const {loading, error} = useSelector(store => store.product)
 
   useEffect(() => {
-    const [minPrice, maxPrice] = priceValue===null ? [0, 0] : priceValue.split('-').map(Number);
-    
     const data = {
-      category: param.item,
-      color: colorValue || [],
-      size: sizeValue || [],
-      minPrice,
-      maxPrice,
+      category: item,
+      colors: colorValue ? colorValue.split(',') : [],
+      sizes: sizeValue ? sizeValue.split(',') : [],
+      minPrice: priceValue ? Number(priceValue.split('-')[0]) : 0,
+      maxPrice: priceValue ? Number(priceValue.split('-')[1]) : 0,
       minDiscount: discountValue || 0,
       sort: sortValue || 'price_low',
-      pageValue: pageValue -1,
+      pageNumber: pageValue - 1,
       pageSize: 10,
-      stockValue: stockValue
-
+      stock: stockValue
     }
-    dispatch(findProducts(data))
-  }, [param.item,
-    colorValue,
-    sizeValue,
-    priceValue,
-    discountValue,
-    sortValue,
-    pageValue,
-    stockValue
-  ])
+    dispatch(findProducts(data));
+  }, [item, colorValue, sizeValue, priceValue, discountValue, sortValue, pageValue, stockValue]);
 
   // Initialize selected filters from URL on component mount
   useEffect(() => {
@@ -424,12 +414,15 @@ export default function Product() {
 
               {/* Product grid */}
               <div className="lg:col-span-3">
-                <div className='flex flex-wrap justify-center bg-white py-5'>
-                    <div className='flex flex-wrap justify-center bg-white py-5'>
-                      {product.products?.content.slice(0, 10).map((product, index) => <ProductCard key={index} product={product} />)}
-                    </div>
-                </div>
-              </div>
+    {loading && <div>Đang tải...</div>}
+    {!loading && product?.products?.content && (
+      <div className='flex flex-wrap justify-center bg-white py-5'>
+        {product.products.content.map((item, index) => (
+          <ProductCard key={index} product={item} />
+        ))}
+      </div>
+    )}
+  </div>
             </div>
           </section>
         </main>
