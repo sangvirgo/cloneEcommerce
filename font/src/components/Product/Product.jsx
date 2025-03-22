@@ -19,7 +19,9 @@ import {
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { ChevronDownIcon, FunnelIcon, MinusIcon, PlusIcon, Squares2X2Icon } from '@heroicons/react/20/solid'
 import ProductCard from './ProductCard'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import { findProducts } from '../../State/Product/Action'
 
 const sortOptions = [
   { name: 'Price: Low to High', href: '#', current: false },
@@ -36,6 +38,9 @@ export default function Product() {
   const [selectedCheckboxes, setSelectedCheckboxes] = useState({})
   const location = useLocation()
   const navigate = useNavigate()
+  const dispatch= useDispatch()
+  const {product} = useSelector(store => store.product)
+
 
   const decodedQueryString=decodeURIComponent(location.search);
   const searchParams = new URLSearchParams(decodedQueryString);
@@ -46,6 +51,34 @@ export default function Product() {
   const sortValue=searchParams.get('sort');
   const pageValue=searchParams.get('page') || 1;
   const stockValue=searchParams.get('stock');
+  const { item } = useParams()
+
+  useEffect(() => {
+    const [minPrice, maxPrice] = priceValue===null ? [0, 0] : priceValue.split('-').map(Number);
+    
+    const data = {
+      category: param.item,
+      color: colorValue || [],
+      size: sizeValue || [],
+      minPrice,
+      maxPrice,
+      minDiscount: discountValue || 0,
+      sort: sortValue || 'price_low',
+      pageValue: pageValue -1,
+      pageSize: 10,
+      stockValue: stockValue
+
+    }
+    dispatch(findProducts(data))
+  }, [param.item,
+    colorValue,
+    sizeValue,
+    priceValue,
+    discountValue,
+    sortValue,
+    pageValue,
+    stockValue
+  ])
 
   // Initialize selected filters from URL on component mount
   useEffect(() => {
@@ -393,7 +426,7 @@ export default function Product() {
               <div className="lg:col-span-3">
                 <div className='flex flex-wrap justify-center bg-white py-5'>
                     <div className='flex flex-wrap justify-center bg-white py-5'>
-                      {mens_kurta.slice(0, 10).map((product, index) => <ProductCard key={index} product={product} />)}
+                      {product.products?.content.slice(0, 10).map((product, index) => <ProductCard key={index} product={product} />)}
                     </div>
                 </div>
               </div>
