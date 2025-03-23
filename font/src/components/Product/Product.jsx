@@ -1,5 +1,4 @@
 'use client'
-import {mens_kurta} from '../Data/mens_kurta'
 import {filters} from '../Data/FilterData'
 import { singleFilter } from '../Data/FilterData'
 import { useState, useEffect } from 'react'
@@ -17,7 +16,7 @@ import {
   MenuItems,
 } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
-import { ChevronDownIcon, FunnelIcon, MinusIcon, PlusIcon, Squares2X2Icon } from '@heroicons/react/20/solid'
+import { ChevronDownIcon, FunnelIcon, MinusIcon, PlusIcon, Squares2X2Icon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid'
 import ProductCard from './ProductCard'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
@@ -55,20 +54,28 @@ export default function Product() {
   const {loading, error} = useSelector(store => store.product)
 
   useEffect(() => {
+    console.log("Component params:", { category: item, colorValue, sizeValue, priceValue, discountValue, sortValue, pageValue });
+    
     const data = {
       category: item,
       colors: colorValue ? colorValue.split(',') : [],
       sizes: sizeValue ? sizeValue.split(',') : [],
       minPrice: priceValue ? Number(priceValue.split('-')[0]) : 0,
-      maxPrice: priceValue ? Number(priceValue.split('-')[1]) : 0,
+      maxPrice: priceValue ? Number(priceValue.split('-')[1]) : 1000000,
       minDiscount: discountValue || 0,
       sort: sortValue || 'price_low',
       pageNumber: pageValue - 1,
-      pageSize: 10,
+      pageSize: 8,
       stock: stockValue
     }
+    
+    console.log("Sending request data:", data);
     dispatch(findProducts(data));
-  }, [item, colorValue, sizeValue, priceValue, discountValue, sortValue, pageValue, stockValue]);
+  }, [item, colorValue, sizeValue, priceValue, discountValue, sortValue, pageValue, stockValue, dispatch]);
+
+  useEffect(() => {
+    console.log("Current product state:", product);
+  }, [product]);
 
   // Initialize selected filters from URL on component mount
   useEffect(() => {
@@ -152,6 +159,68 @@ export default function Product() {
       return selectedCheckboxes[sectionId].includes(value)
     }
     return false
+  }
+
+  // Hàm chuyển trang
+  const handlePageChange = (newPage) => {
+    const searchParams = new URLSearchParams(location.search)
+    searchParams.set('page', newPage)
+    const query = searchParams.toString()
+    navigate({ search: `?${query}` })
+  }
+  
+  // Tạo danh sách các trang để hiển thị
+  const getPaginationItems = () => {
+    if (!product || !product.totalPages) return []
+    
+    const currentPage = Number(pageValue)
+    const totalPages = product.totalPages
+    
+    // Chỉ hiển thị tối đa 5 nút trang số
+    let startPage = Math.max(1, currentPage - 2)
+    let endPage = Math.min(totalPages, startPage + 4)
+    
+    // Điều chỉnh lại khi ở gần cuối
+    if (endPage - startPage < 4) {
+      startPage = Math.max(1, endPage - 4)
+    }
+    
+    const pages = []
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i)
+    }
+    
+    return pages
+  }
+  
+  // Hàm hiển thị tất cả sản phẩm
+  const fetchAllProducts = async () => {
+    try {
+      navigate(`/product/all`)
+      const response = await fetch('http://localhost:8080/api/products/all-products');
+      const data = await response.json();
+      console.log("Tất cả sản phẩm:", data);
+      if (data && data.length > 0) {
+        // Tạo dữ liệu giả tương tự với định dạng trả về của findProducts
+        const fakePagedData = {
+          content: data,
+          totalPages: Math.ceil(data.length / 8),
+          totalElements: data.length,
+          last: true,
+          first: true,
+          size: data.length,
+          number: 0,
+          numberOfElements: data.length,
+          empty: data.length === 0
+        };
+        dispatch({type: 'FIND_PRODUCT_SUCCESS', payload: fakePagedData});
+      } else {
+        alert('Không tìm thấy sản phẩm nào trong cơ sở dữ liệu');
+      }
+    } catch (error) {
+      console.error("Lỗi khi tải tất cả sản phẩm:", error);
+      // alert('Lỗi khi tải tất cả sản phẩm: ' + error.message);
+    }
   }
 
   return (
@@ -285,6 +354,13 @@ export default function Product() {
                   </div>
                 </MenuItems>
               </Menu>
+              
+              <button
+                onClick={fetchAllProducts}
+                className="ml-4 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              >
+                Hiển thị tất cả
+              </button>
 
               <button type="button" className="-m-2 ml-5 p-2 text-gray-400 hover:text-gray-500 sm:ml-7">
                 <span className="sr-only">View grid</span>
@@ -414,16 +490,113 @@ export default function Product() {
 
               {/* Product grid */}
               <div className="lg:col-span-3">
-    {loading && <div>Đang tải...</div>}
-    {!loading && product?.products?.content && (
-      <div className='flex flex-wrap justify-center bg-white py-5'>
-        {product.products.content.map((item, index) => (
-          <ProductCard key={index} product={item} />
-        ))}
-      </div>
-    )}
-  </div>
+              {loading && (
+                <div className="text-center py-10">
+                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent"></div>
+                  <p className="mt-2">Đang tải sản phẩm...</p>
+                </div>
+              )}
+              {error && (
+                <div className="text-center py-10 text-red-500">
+                  <p>Đã xảy ra lỗi: {error}</p>
+                  <p className="text-sm">Vui lòng thử lại sau</p>
+                </div>
+              )}
+        {!loading && !error && (
+          <div className='flex flex-col bg-white py-5'>
+            {/* Danh sách sản phẩm */}
+            <div className='flex flex-wrap justify-center'>
+              {product && product.content && product.content.length > 0 ? (
+                product.content.map((item, index) => (
+                  <ProductCard key={index} product={item} />
+                ))
+              ) : (
+                <div className="text-center w-full py-10">
+                  <p className="text-gray-500 text-lg">Không tìm thấy sản phẩm nào</p>
+                  <p className="text-gray-400">Vui lòng thử với bộ lọc khác</p>
+                  
+                  <div className="mt-6">
+                    <button
+                      onClick={fetchAllProducts}
+                      className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                    >
+                      Hiển thị tất cả sản phẩm
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
+            
+            {/* Phân trang */}
+            {product && product.content && product.content.length > 0 && (
+              <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-4">
+                <div className="flex flex-1 justify-between sm:hidden">
+                  <button
+                    onClick={() => handlePageChange(Math.max(1, Number(pageValue) - 1))}
+                    disabled={Number(pageValue) <= 1}
+                    className={`relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 ${Number(pageValue) <= 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                  >
+                    Trang trước
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(Number(pageValue) + 1)}
+                    disabled={Number(pageValue) >= product.totalPages}
+                    className={`relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 ${Number(pageValue) >= product.totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                  >
+                    Trang sau
+                  </button>
+                </div>
+                <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm text-gray-700">
+                      Hiển thị <span className="font-medium">{((Number(pageValue) - 1) * 8) + 1}</span> đến <span className="font-medium">{Math.min(Number(pageValue) * 8, product.totalElements)}</span> của{' '}
+                      <span className="font-medium">{product.totalElements}</span> sản phẩm
+                    </p>
+                  </div>
+                  <div>
+                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                      <button
+                        onClick={() => handlePageChange(Math.max(1, Number(pageValue) - 1))}
+                        disabled={Number(pageValue) <= 1}
+                        className={`relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 ${Number(pageValue) <= 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50 focus:z-20 focus:outline-offset-0'}`}
+                      >
+                        <span className="sr-only">Trang trước</span>
+                        <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
+                      </button>
+                      
+                      {getPaginationItems().map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          aria-current={Number(pageValue) === page ? 'page' : undefined}
+                          className={classNames(
+                            Number(pageValue) === page
+                              ? 'z-10 bg-indigo-600 text-white focus:z-20'
+                              : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0',
+                            'relative inline-flex items-center px-4 py-2 text-sm font-semibold'
+                          )}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      
+                      <button
+                        onClick={() => handlePageChange(Number(pageValue) + 1)}
+                        disabled={Number(pageValue) >= product.totalPages}
+                        className={`relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 ${Number(pageValue) >= product.totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50 focus:z-20 focus:outline-offset-0'}`}
+                      >
+                        <span className="sr-only">Trang sau</span>
+                        <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
+                      </button>
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
           </section>
         </main>
       </div>

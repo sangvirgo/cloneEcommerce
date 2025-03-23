@@ -1,31 +1,14 @@
-  /*
-    This example requires some changes to your config:
-    
-    ```
-    // tailwind.config.js
-    module.exports = {
-      // ...
-      theme: {
-        extend: {
-          gridTemplateRows: {
-            '[auto,auto,1fr]': 'auto auto 1fr',
-          },
-        },
-      },
-    }
-    ```
-  */
-  'use client'
+import { useEffect, useState } from 'react'
+import { Radio, RadioGroup } from '@headlessui/react'
+import { Rating, Button, Grid, Box, LinearProgress } from '@mui/material'
+import ProductReviewCard from './ProductReviewCard'
+import {mens_kurta} from '../../components/Data/mens_kurta'
+import HomeSectionCard from '../HomeSectionCard/HomeSectionCard'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import { findProductsById } from '../../State/Product/Action'
 
-  import { useState } from 'react'
-  import { Radio, RadioGroup } from '@headlessui/react'
-  import { Rating, Button, Grid, Box, LinearProgress } from '@mui/material'
-  import ProductReviewCard from './ProductReviewCard'
-  import {mens_kurta} from '../../components/Data/mens_kurta'
-  import HomeSectionCard from '../HomeSectionCard/HomeSectionCard'
-import { useNavigate } from 'react-router-dom'
-
-  const product = {
+  const productTemp = {
     name: 'Basic Tee 6-Pack',
     price: '$192',
     href: '#',
@@ -113,19 +96,45 @@ import { useNavigate } from 'react-router-dom'
   }
 
   export default function ProductDetails() {
-    const [selectedColor, setSelectedColor] = useState(product.colors[0])
-    const [selectedSize, setSelectedSize] = useState(product.sizes[2])
+    const [selectedColor, setSelectedColor] = useState("")
+    const [selectedSize, setSelectedSize] = useState("")
     const navigate=useNavigate()
+    const params = useParams()
+    const dispatch = useDispatch()
+    const {product} = useSelector(store => store.product)
+    const {loading, error} = useSelector(store => store.product)
+
     const handleClickToCart = ()=> {
       navigate('/cart')
     }
 
+    useEffect(() => {
+      if (params.productId) {
+        const data = {productId: params.productId};
+        dispatch(findProductsById(data));
+      }
+    }, [dispatch, params.productId]);
+
+
     return (
+      
       <div className="bg-white mb-[-38px]">
+        {loading && (
+          <div className="text-center py-10">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent"></div>
+            <p className="mt-2">Đang tải sản phẩm...</p>
+          </div>
+        )}
+        {error && (
+          <div className="text-center py-10 text-red-500">
+            <p>Đã xảy ra lỗi: {error}</p>
+            <p className="text-sm">Vui lòng thử lại sau</p>
+          </div>
+        )}
         <div className="pt-6">
           <nav aria-label="Breadcrumb">
             <ol role="list" className="mx-auto flex max-w-2xl items-center space-x-2 px-4 sm:px-6 lg:max-w-7xl lg:px-8">
-              {product.breadcrumbs.map((breadcrumb) => (
+              {productTemp.breadcrumbs.map((breadcrumb) => (
                 <li key={breadcrumb.id}>
                   <div className="flex items-center">
                     <a href={breadcrumb.href} className="mr-2 text-sm font-medium text-gray-900">
@@ -145,8 +154,8 @@ import { useNavigate } from 'react-router-dom'
                 </li>
               ))}
               <li className="text-sm">
-                <a href={product.href} aria-current="page" className="font-medium text-gray-500 hover:text-gray-600">
-                  {product.name}
+                <a href={productTemp.href} aria-current="page" className="font-medium text-gray-500 hover:text-gray-600">
+                  {product.title}
                 </a>
               </li>
             </ol>
@@ -159,14 +168,14 @@ import { useNavigate } from 'react-router-dom'
           <div className="flex flex-col items-center lg:w-1/2">
               <div className='overflow-hidden rounded-lg max-w-[35rem] max-h-[40rem]'>
                   <img
-                  alt={product.images[0].alt}
-                  src={product.images[0].src}
+                  alt={productTemp.images[0].alt}
+                  src={product.imageUrl}
                   className="hidden size-full rounded-lg object-cover lg:block"
               />
               </div>
 
             <div className="mt-4 flex flex-wrap gap-4 justify-center">
-              {product.images.map((image, index) => (
+              {productTemp.images.map((image, index) => (
                 <div key={index} className="aspect-h-2 aspect-w-3 overflow-hidden rounded-lg max-w-[10rem] max-h-[12rem]">
                   <img
                     alt={image.alt}
@@ -181,9 +190,9 @@ import { useNavigate } from 'react-router-dom'
           {/* Product info */}
           <div className="lg:w-1/2">
             <div className="lg:col-span-2">
-              <h1 className="text-lg lg:text-xl text-gray-900 sm:text-3xl font-semibold">{product.name}</h1>
+              <h1 className="text-lg lg:text-xl text-gray-900 sm:text-3xl font-semibold">{product.title}</h1>
 
-              <h1 className='text-lg lg:text-xl text-gray-900 opacity-60 pt-1'>{product.note}</h1>
+              <h1 className='text-lg lg:text-xl text-gray-900 opacity-60 pt-1'>{productTemp.note}</h1>
             </div>
 
             {/* Options */}
@@ -191,17 +200,17 @@ import { useNavigate } from 'react-router-dom'
               <h2 className="sr-only">Product information</h2>
               
               <div className='flex items-center space-x-5 text-lg text-gray-900 mt-6 lg:text-xl'>
-                <p className='font-semibold'>$199</p>
-                <p className='opacity-50 line-through'>$211</p>
-                <p className='text-green-500 font-semibold'>5% off</p>
+                <p className='font-semibold'>${product.price-product.discountedPrice}</p>
+                <p className='opacity-50 line-through'>${product.price}</p>
+                <p className='text-green-500 font-semibold'>{product.discountPersent}% off</p>
               </div>
 
               {/* Reviews */}
               <div className="mt-6">
                 <h3 className="sr-only">Reviews</h3>
                 <div className='flex items-center space-x-3.5'>
-                  <Rating name="read-only" value={reviews.average} readOnly />
-                  <p className='opacity-50 text-sm'>{reviews.totalCount} Ratings</p>
+                  <Rating name="read-only" value={product.numRating} readOnly />
+                  <p className='opacity-50 text-sm'>{product.numRating} Ratings</p>
                   <p className='ml-3 text-sm font-medium text-fuchsia-600 hover:text-indigo-500'>{reviews.reviewsCount} Reviews</p>
                 </div>
               </div>
@@ -213,7 +222,7 @@ import { useNavigate } from 'react-router-dom'
 
                   <fieldset aria-label="Choose a color" className="mt-4">
                     <RadioGroup value={selectedColor} onChange={setSelectedColor} className="flex items-center gap-x-3">
-                      {product.colors.map((color) => (
+                      {productTemp.colors.map((color) => (
                         <Radio
                           key={color.name}
                           value={color}
@@ -250,6 +259,7 @@ import { useNavigate } from 'react-router-dom'
                         <Radio
                           key={size.name}
                           value={size}
+                          size.inStock = size.quantity > 0 ? true : false;
                           disabled={!size.inStock}
                           className={classNames(
                             size.inStock
@@ -308,7 +318,7 @@ import { useNavigate } from 'react-router-dom'
 
                 <div className="mt-4">
                   <ul role="list" className="list-disc space-y-2 pl-4 text-sm">
-                    {product.highlights.map((highlight) => (
+                    {productTemp.highlights.map((highlight) => (
                       <li key={highlight} className="text-gray-400">
                         <span className="text-gray-600">{highlight}</span>
                       </li>
@@ -321,7 +331,7 @@ import { useNavigate } from 'react-router-dom'
                 <h2 className="text-sm font-medium text-gray-900">Details</h2>
 
                 <div className="mt-4 space-y-6">
-                  <p className="text-sm text-gray-600">{product.details}</p>
+                  <p className="text-sm text-gray-600">{productTemp.details}</p>
                 </div>
               </div>
             </div>

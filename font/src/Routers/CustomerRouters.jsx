@@ -24,12 +24,12 @@ const CustomerRouters = () => {
             <Route path="/" element={<HomePage />} />
             <Route path="/cart" element={<Cart/>} />
             <Route path="/:category/:section/:item" element={<Product/>} />
+            <Route path="/product/all" element={<Product/>} />
             <Route path="/product/:productId" element={<ProductDetails/>} />
             <Route path="/checkout" element={<Checkout/>} />
             <Route path="/account/order" element={<Order/>} />
             <Route path="/checkout/order/:orderId" element={<OrderDetail/>} />
             <Route path="/oauth2/redirect" element={<OAuthRedirect />} />
-
 
         </Routes>
 

@@ -125,21 +125,54 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Page<Product> findAllProductsByFilter(String category, List<String> colors, List<String> sizes, 
+    public Page<Product> findAllProductsByFilter(String category, List<String> colors, List<String> sizes,
             Integer minPrice, Integer maxPrice, Integer minDiscount, String sort, String stock, 
             Integer pageNumber, Integer pageSize) throws GlobalExceptionHandler {
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        List<Product> products = productRepository.filterProducts(category, minPrice, maxPrice, minDiscount, sort);
         
-        final List<String> finalColors = colors != null ? colors : new ArrayList<>();
-        final List<String> finalSizes = sizes != null ? sizes : new ArrayList<>();
+        System.out.println("Filtering products with: category=" + category + ", colors=" + colors + ", sizes=" + sizes);
+        
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        
+        // Nếu category là null, lấy tất cả sản phẩm
+        List<Product> products;
+        if (category == null || category.isEmpty()) {
+            System.out.println("Category is null or empty, fetching all products");
+            products = productRepository.findAll();
+        } else {
+            products = productRepository.filterProducts(category, minPrice, maxPrice, minDiscount, sort);
+        }
+        
+        System.out.println("Found " + products.size() + " products from initial query");
 
-        if(!finalColors.isEmpty()) {
+        // Xử lý colors nếu không null và không trống
+        if(colors != null && !colors.isEmpty()) {
+            List<String> finalColors = colors;
             products = products.stream()
-                .filter(product -> finalColors.stream().anyMatch(c -> c.equalsIgnoreCase(product.getColor())))
+                .filter(product -> product.getColor() != null && finalColors.stream()
+                    .anyMatch(c -> c.equalsIgnoreCase(product.getColor())))
                 .collect(Collectors.toList());
+            System.out.println("After color filter: " + products.size() + " products");
         }
 
+        // Xử lý sizes nếu không null và không trống
+        if(sizes != null && !sizes.isEmpty()) {
+            products = products.stream()
+                .filter(product -> {
+                    // Nếu sản phẩm không có danh sách size hoặc danh sách rỗng thì bỏ qua
+                    if(product.getSizes() == null || product.getSizes().isEmpty()) {
+                        return false;
+                    }
+                    
+                    // Kiểm tra xem có size nào khớp với yêu cầu không
+                    return product.getSizes().stream()
+                        .anyMatch(size -> size != null && size.getName() != null && 
+                                sizes.stream().anyMatch(s -> 
+                                    s.equalsIgnoreCase(size.getName()) || 
+                                    size.getName().toLowerCase().contains(s.toLowerCase())));
+                })
+                .collect(Collectors.toList());
+            System.out.println("After size filter: " + products.size() + " products");
+        }
 
         if(stock != null) {
             if(stock.equals("in_stock")) {
@@ -148,11 +181,19 @@ public class ProductServiceImpl implements ProductService {
             else if(stock.equals("out_of_stock")) {
                 products = products.stream().filter(p -> p.getQuantity() == 0).collect(Collectors.toList());
             }
+            System.out.println("After stock filter: " + products.size() + " products");
         }
 
         int startIndex = (int) pageable.getOffset();
         int endIndex = Math.min((startIndex + pageable.getPageSize()), products.size());
+        
+        if (startIndex >= products.size()) {
+            System.out.println("Returning empty page because startIndex >= products.size()");
+            return new PageImpl<>(new ArrayList<>(), pageable, products.size());
+        }
+        
         List<Product> pageProducts = products.subList(startIndex, endIndex);
+        System.out.println("Returning " + pageProducts.size() + " products on page " + pageNumber);
 
         return new PageImpl<>(pageProducts, pageable, products.size());
     }
