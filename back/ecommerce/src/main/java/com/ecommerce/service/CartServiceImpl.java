@@ -25,6 +25,9 @@ public class CartServiceImpl implements CartService {
     @Autowired
     private ProductService productService;
 
+    @Autowired
+    private UserService userService;
+
     @Override
     public Cart createCart(User user) {
         Cart cart = new Cart();
@@ -32,11 +35,17 @@ public class CartServiceImpl implements CartService {
         return cartRepository.save(cart);
     }
 
+    private Cart createCart(Long userId) throws GlobalExceptionHandler {
+        User user = userService.findUserById(userId);
+        return createCart(user);
+    }
+
     @Override
     public Cart findUserCart(Long userId) throws GlobalExceptionHandler {
         Cart cart = cartRepository.findByUserId(userId);
         if (cart == null) {
-            throw new GlobalExceptionHandler("Cart not found", "CART_NOT_FOUND");
+            // Tạo giỏ hàng mới nếu chưa có
+            cart = createCart(userId);
         }
         return cart;
     }

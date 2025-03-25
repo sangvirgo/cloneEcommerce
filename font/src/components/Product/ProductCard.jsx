@@ -19,7 +19,7 @@ const ProductCard = ({product}) => {
                     </div>
 
                     <div className="flex justify-between items-center mt-3">
-                        <p className="font-semibold">${product.discountedPrice}</p>
+                        <p className="font-semibold">${product.price - product.discountedPrice}</p>
                         <p className="line-through opacity-50">${product.price}</p>
                         <p className="text-green-400 font-semibold">{product.discountPersent}% off</p>
 

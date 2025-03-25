@@ -7,6 +7,7 @@ import HomeSectionCard from '../HomeSectionCard/HomeSectionCard'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { findProductsById } from '../../State/Product/Action'
+import { addItemToCart } from '../../State/Cart/Action'
 
   const productTemp = {
     name: 'Basic Tee 6-Pack',
@@ -96,15 +97,33 @@ import { findProductsById } from '../../State/Product/Action'
   }
 
   export default function ProductDetails() {
-    const [selectedColor, setSelectedColor] = useState("")
-    const [selectedSize, setSelectedSize] = useState("")
     const navigate=useNavigate()
     const params = useParams()
     const dispatch = useDispatch()
     const {product} = useSelector(store => store.product)
     const {loading, error} = useSelector(store => store.product)
+    
+    // Thêm useEffect để set size mặc định khi product được load
+    useEffect(() => {
+      if (product && product.sizes && product.sizes.length > 0) {
+        // Tìm size đầu tiên còn hàng
+        const firstAvailableSize = product.sizes.find(size => size.quantity > 0);
+        if (firstAvailableSize) {
+          setSelectedSize(firstAvailableSize);
+        }
+      }
+    }, [product]);
+
+    const [selectedSize, setSelectedSize] = useState();
 
     const handleClickToCart = ()=> {
+      if (!selectedSize) {
+        alert("Vui lòng chọn size trước khi thêm vào giỏ hàng");
+        return;
+      }
+      const data = {productId: params.productId, size: selectedSize.name};
+      console.log("Item to cart: ", data);
+      dispatch(addItemToCart(data));
       navigate('/cart')
     }
 
@@ -115,6 +134,28 @@ import { findProductsById } from '../../State/Product/Action'
       }
     }, [dispatch, params.productId]);
 
+    const colorToClass = (color) => {
+      if (!color) return 'bg-gray-500'; // Fallback if color is undefined or null
+      color = color.toLowerCase();
+      const colorMap = {
+        đen: 'bg-black',
+        trắng: 'bg-white',
+        đỏ: 'bg-red-500',
+        xanh: 'bg-green-500',
+        xám: 'bg-gray-500',
+        vàng: 'bg-yellow-500',
+        Green: 'bg-green-500',
+        Blue: 'bg-blue-500',
+        Gray: 'bg-gray-500',
+        Red: 'bg-red-500',
+        'Yellow': 'bg-yellow-500',
+        Black: 'bg-black',
+        White: 'bg-white',
+        'xanh đậm': 'bg-green-800',
+        Purple: 'bg-purple-500',
+      };
+      return colorMap[color.toLowerCase()] || 'bg-gray-500'; // Default to gray if color not found
+    };
 
     return (
       
@@ -155,7 +196,7 @@ import { findProductsById } from '../../State/Product/Action'
               ))}
               <li className="text-sm">
                 <a href={productTemp.href} aria-current="page" className="font-medium text-gray-500 hover:text-gray-600">
-                  {product.title}
+                  {product?.title}
                 </a>
               </li>
             </ol>
@@ -169,7 +210,7 @@ import { findProductsById } from '../../State/Product/Action'
               <div className='overflow-hidden rounded-lg max-w-[35rem] max-h-[40rem]'>
                   <img
                   alt={productTemp.images[0].alt}
-                  src={product.imageUrl}
+                  src={product?.imageUrl}
                   className="hidden size-full rounded-lg object-cover lg:block"
               />
               </div>
@@ -190,7 +231,7 @@ import { findProductsById } from '../../State/Product/Action'
           {/* Product info */}
           <div className="lg:w-1/2">
             <div className="lg:col-span-2">
-              <h1 className="text-lg lg:text-xl text-gray-900 sm:text-3xl font-semibold">{product.title}</h1>
+              <h1 className="text-lg lg:text-xl text-gray-900 sm:text-3xl font-semibold">{product?.title}</h1>
 
               <h1 className='text-lg lg:text-xl text-gray-900 opacity-60 pt-1'>{productTemp.note}</h1>
             </div>
@@ -200,46 +241,35 @@ import { findProductsById } from '../../State/Product/Action'
               <h2 className="sr-only">Product information</h2>
               
               <div className='flex items-center space-x-5 text-lg text-gray-900 mt-6 lg:text-xl'>
-                <p className='font-semibold'>${product.price-product.discountedPrice}</p>
-                <p className='opacity-50 line-through'>${product.price}</p>
-                <p className='text-green-500 font-semibold'>{product.discountPersent}% off</p>
+                <p className='font-semibold'>${product?.price - (product?.discountedPrice || 0)}</p>
+                <p className='opacity-50 line-through'>${product?.price}</p>
+                <p className='text-green-500 font-semibold'>{product?.discountPersent}% off</p>
               </div>
 
               {/* Reviews */}
               <div className="mt-6">
                 <h3 className="sr-only">Reviews</h3>
                 <div className='flex items-center space-x-3.5'>
-                  <Rating name="read-only" value={product.numRating} readOnly />
-                  <p className='opacity-50 text-sm'>{product.numRating} Ratings</p>
+                  <Rating name="read-only" value={product?.numRating || 0} readOnly />
+                  <p className='opacity-50 text-sm'>{product?.numRating || 0} Ratings</p>
                   <p className='ml-3 text-sm font-medium text-fuchsia-600 hover:text-indigo-500'>{reviews.reviewsCount} Reviews</p>
                 </div>
               </div>
 
               <form className="mt-10">
                 {/* Colors */}
+                {/* Color - Display as static info */}
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900">Color</h3>
-
-                  <fieldset aria-label="Choose a color" className="mt-4">
-                    <RadioGroup value={selectedColor} onChange={setSelectedColor} className="flex items-center gap-x-3">
-                      {productTemp.colors.map((color) => (
-                        <Radio
-                          key={color.name}
-                          value={color}
-                          aria-label={color.name}
-                          className={classNames(
-                            color.selectedClass,
-                            'relative -m-0.5 flex cursor-pointer items-center justify-center rounded-full p-0.5 focus:outline-hidden data-checked:ring-2 data-focus:data-checked:ring-3 data-focus:data-checked:ring-offset-1',
-                          )}
-                        >
-                          <span
-                            aria-hidden="true"
-                            className={classNames(color.class, 'size-8 rounded-full border border-black/10')}
-                          />
-                        </Radio>
-                      ))}
-                    </RadioGroup>
-                  </fieldset>
+                  <h3 className="text-sm font-medium text-gray-900">Màu sắc</h3>
+                  <div className="mt-4 flex items-center gap-x-3">
+                    <span
+                      className={classNames(
+                        colorToClass(product?.color),
+                        'size-8 rounded-full border border-black/10'
+                      )}
+                    />
+                    <span className="text-gray-900">{product?.color}</span>
+                  </div>
                 </div>
 
                 {/* Sizes */}
@@ -250,35 +280,32 @@ import { findProductsById } from '../../State/Product/Action'
                   </div>
 
                   <fieldset aria-label="Choose a size" className="mt-4">
-                    <RadioGroup
-                      value={selectedSize}
-                      onChange={setSelectedSize}
-                      className="grid grid-cols-4 gap-4 sm:grid-cols-8 lg:grid-cols-4"
-                    >
-                      {product.sizes.map((size) => (
+                  <RadioGroup
+                    value={selectedSize}
+                    onChange={setSelectedSize}
+                    className="grid grid-cols-4 gap-4 sm:grid-cols-8 lg:grid-cols-4 mt-4"
+                  >
+                    {(product?.sizes || []).map((size) => {
+                      const inStock = size.quantity > 0;
+                      return (
                         <Radio
                           key={size.name}
                           value={size}
-                          size.inStock = size.quantity > 0 ? true : false;
-                          disabled={!size.inStock}
+                          disabled={!inStock}
                           className={classNames(
-                            size.inStock
+                            inStock
                               ? 'cursor-pointer bg-white text-gray-900 shadow-xs'
                               : 'cursor-not-allowed bg-gray-50 text-gray-200',
-                            'group relative flex items-center justify-center rounded-md border px-4 py-3 text-sm font-medium uppercase hover:bg-gray-50 focus:outline-hidden data-focus:ring-2 data-focus:ring-indigo-500 sm:flex-1 sm:py-6',
+                            'group relative flex items-center justify-center rounded-md border px-4 py-3 text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none data-focus:ring-2 data-focus:ring-indigo-500 sm:flex-1 sm:py-6'
                           )}
                         >
                           <span>{size.name}</span>
-                          {size.inStock ? (
+                          {inStock ? (
                             <span
-                              aria-hidden="true"
-                              className="pointer-events-none absolute -inset-px rounded-md border-2 border-transparent group-data-checked:border-indigo-500 group-data-focus:border"
+                              className="pointer-events-none absolute -inset-px rounded-md border-2 border-transparent group-data-checked:border-indigo-500"
                             />
                           ) : (
-                            <span
-                              aria-hidden="true"
-                              className="pointer-events-none absolute -inset-px rounded-md border-2 border-gray-200"
-                            >
+                            <span className="pointer-events-none absolute -inset-px rounded-md border-2 border-gray-200">
                               <svg
                                 stroke="currentColor"
                                 viewBox="0 0 100 100"
@@ -290,8 +317,9 @@ import { findProductsById } from '../../State/Product/Action'
                             </span>
                           )}
                         </Radio>
-                      ))}
-                    </RadioGroup>
+                      );
+                    })}
+                  </RadioGroup>
                   </fieldset>
                 </div>
 
@@ -309,7 +337,7 @@ import { findProductsById } from '../../State/Product/Action'
                 <h3 className="sr-only">Description</h3>
 
                 <div className="space-y-6">
-                  <p className="text-base text-gray-900">{product.description}</p>
+                  <p className="text-base text-gray-900">{product?.description}</p>
                 </div>
               </div>
 

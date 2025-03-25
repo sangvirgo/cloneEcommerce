@@ -13,7 +13,6 @@ const HomePage = () => {
         <div className="space-y-10 py-20 flex flex-col justify-center">
             <HomeSectionCarousel data={mens_kurta} sectionName={"Men's clothing"}/>
             <HomeSectionCarousel data={mens_kurta} sectionName={"Women's clothing"}/>
-            <HomeSectionCarousel data={mens_kurta} sectionName={"Mix clothing"} />
         </div>
     </div>
   )

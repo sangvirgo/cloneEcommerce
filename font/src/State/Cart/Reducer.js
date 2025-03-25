@@ -3,73 +3,58 @@ import { ADD_ITEM_TO_CART_FAILURE, ADD_ITEM_TO_CART_REQUEST, ADD_ITEM_TO_CART_SU
 const initState = {
     cart: null,
     loading: false,
-    error: null,
-    cartItems: [],
+    error: null
 }
 
 export const cartReducer = (state = initState, action) => {
     switch(action.type) {
         case ADD_ITEM_TO_CART_REQUEST:
-            return {
-                ...state,
-                loading: true,
-                error: null
-            }
-        case ADD_ITEM_TO_CART_SUCCESS:
-            return {
-                ...state,
-                cartItems: [...state.cartItems, action.payload.cartItems],
-                loading: false
-            }
-        case ADD_ITEM_TO_CART_FAILURE:
-            return {
-                ...state,
-                loading: false,
-                error: action.payload
-            }
-
         case GET_CART_REQUEST:
-            return {
-                ...state,
-                loading: true,
-            }
-        case GET_CART_SUCCESS:
-            return {
-                ...state,
-                cart: action.payload.cart,
-                cartItems: action.payload.cartItems,
-                loading: false
-            }
-        case GET_CART_FAILURE:
-            return {
-                ...state,
-                loading: false,
-                error: action.payload
-            }
-        
         case REMOVE_ITEM_FROM_CART_REQUEST:
         case UPDATE_ITEM_IN_CART_REQUEST:
             return {
                 ...state,
                 loading: true,
+                error: null
             }
+
+        case GET_CART_SUCCESS:
+            return {
+                ...state,
+                cart: action.payload,
+                loading: false,
+                error: null
+            }
+
+        case ADD_ITEM_TO_CART_SUCCESS:
+            return {
+                ...state,
+                cart: action.payload,
+                loading: false,
+                error: null
+            }
+
         case REMOVE_ITEM_FROM_CART_SUCCESS:
             return {
                 ...state,
-                cartItems: state.cartItems.filter(
-                    (item) => item.id !== action.payload
-                ),
-                loading: false
-            };
+                cart: {
+                    ...state.cart,
+                    cartItems: state.cart.cartItems.filter(item => item.id !== action.payload)
+                },
+                loading: false,
+                error: null
+            }
+
         case UPDATE_ITEM_IN_CART_SUCCESS:
             return {
                 ...state,
-                cartItems: state.cartItems.map((item) =>     
-                    item.id === action.payload.id ? action.payload : item
-                ),
-                loading: false
-            };
-        
+                cart: action.payload,
+                loading: false,
+                error: null
+            }
+
+        case ADD_ITEM_TO_CART_FAILURE:
+        case GET_CART_FAILURE:
         case REMOVE_ITEM_FROM_CART_FAILURE:
         case UPDATE_ITEM_IN_CART_FAILURE:
             return {
@@ -77,7 +62,7 @@ export const cartReducer = (state = initState, action) => {
                 loading: false,
                 error: action.payload
             }
-        
+
         default:
             return state
     }

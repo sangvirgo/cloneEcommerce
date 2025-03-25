@@ -1,25 +1,24 @@
-import { useState } from 'react';
-import { Button, Grid, TextField, Box } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { Button, Grid, TextField, Box, RadioGroup, Radio, FormControlLabel } from '@mui/material';
 import AddressCard from './AddressCard';
 import "./Checkout.css"
+import { useDispatch, useSelector } from 'react-redux';
+import { addAddress, getAddress } from '../../State/Order/Action';
+import { useNavigate } from 'react-router-dom';
 
 const DeliveryAddressForm = () => {
-  // State để lưu địa chỉ đã nhập
-  const [savedAddresses, setSavedAddresses] = useState([
-    {
-      firstName: 'John',
-      lastName: 'Doe',  
-      streetAddress: '123 Main St',
-      city: 'New York',
-      state: 'NY',
-      zipCode: '10001',
-      mobile: '123-456-7890',
-    },
-  ]);
+  const {address} = useSelector(store => store.order)
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+
+  useEffect(() => {
+    dispatch(getAddress())
+  }, [dispatch])
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('submit');
     const data = new FormData(e.currentTarget);
     const newAddress = {
       firstName: data.get('firstName'),
@@ -30,40 +29,80 @@ const DeliveryAddressForm = () => {
       zipCode: data.get('zip'),
       mobile: data.get('phoneNumber'),
     };
-    console.log('address', newAddress);
+    console.log('Submitting new address:', newAddress);
+    dispatch(addAddress(newAddress));
+  };
 
-    // Thêm địa chỉ mới vào danh sách và cập nhật state
-    setSavedAddresses([...savedAddresses, newAddress]);
+  const handleAddressSelection = (event) => {
+    const selectedId = event.target.value;
+    console.log("Current addresses:", address.data?.find(a => a.id==selectedId));
+    console.log('Selected address ID:', selectedId);
+    setSelectedAddressId(selectedId);
+  };
+
+  const handleDeliverHere = () => {
+    if (selectedAddressId) {
+      const selectedAddress = address?.data?.find(addr => addr.id == selectedAddressId);
+      if (selectedAddress) {
+        console.log('Proceeding with address:', selectedAddress);
+        navigate('/checkout?step=3');
+      }
+    } else {
+      alert('Vui lòng chọn địa chỉ giao hàng');
+    }
   };
 
   return (
     <div>
       <Grid container spacing={4}>
-        {/* Cột hiển thị danh sách địa chỉ đã lưu */}
+        {/* Saved Addresses Column */}
         <Grid item xs={12} lg={5} className="summary rounded-md shadow-md h-[55.5vh] overflow-y-scroll">
-
-
-          <div className="pr-5 mt-[-2.5rem]">
-            {savedAddresses.map((item, index) => (
-              <AddressCard key={index} address={item} />
-            ))}
+          <div className="lg:px-16 relative">
+            {address?.data && address.data.length > 0 ? (
+              <RadioGroup 
+                value={selectedAddressId || ''}
+                onChange={handleAddressSelection}
+              >
+                {address.data.map((item) => (
+                  <FormControlLabel
+                    key={item.id}
+                    value={item.id}
+                    control={<Radio />}
+                    label={
+                      <AddressCard 
+                        address={item} 
+                        isSelected={selectedAddressId === item.id}
+                      />
+                    }
+                  />
+                ))}
+              </RadioGroup>
+            ) : (
+              <div className="text-center py-10">
+                <p className="text-gray-500">Chưa có địa chỉ nào được lưu</p>
+              </div>
+            )}
 
             <Button
-              sx={{ mt: 2, bgcolor: 'RGB(145 85 253)', '&:hover': { bgcolor: 'blue' } }}
+              onClick={handleDeliverHere}
+              sx={{ 
+                mt: 2, 
+                bgcolor: 'RGB(145 85 253)', 
+                '&:hover': { bgcolor: 'RGB(124 58 237)' },
+                width: '100%'
+              }}
               size="large"
-              type="submit" // Thêm type="submit" để form hoạt động
               variant="contained"
+              // disabled={!selectedAddressId}
             >
-              Deliver Here
+              Delivery Here
             </Button>
-
-
           </div>
         </Grid>
 
-        {/* Cột chứa form nhập địa chỉ */}
+        {/* Add New Address Column */}
         <Grid item xs={12} lg={7}>
-          <Box className="border-zinc-600 rounded-s-md shadow-md p-5 formBorder ">
+          <Box className="border rounded-md shadow-md p-5">
             <form onSubmit={handleSubmit}>
               <Grid container spacing={3}>
                 <Grid item xs={12} sm={6}>
@@ -71,7 +110,7 @@ const DeliveryAddressForm = () => {
                     required
                     id="firstName"
                     name="firstName"
-                    label="First Name"
+                    label="Họ"
                     fullWidth
                     autoComplete="given-name"
                   />
@@ -82,9 +121,9 @@ const DeliveryAddressForm = () => {
                     required
                     id="lastName"
                     name="lastName"
-                    label="Last Name"
+                    label="Tên"
                     fullWidth
-                    autoComplete="family-name" // Điều chỉnh autoComplete cho họ
+                    autoComplete="family-name"
                   />
                 </Grid>
 
@@ -93,7 +132,7 @@ const DeliveryAddressForm = () => {
                     required
                     id="address"
                     name="address"
-                    label="Address"
+                    label="Địa chỉ"
                     fullWidth
                     autoComplete="street-address"
                     multiline
@@ -106,7 +145,7 @@ const DeliveryAddressForm = () => {
                     required
                     id="city"
                     name="city"
-                    label="City"
+                    label="Thành phố"
                     fullWidth
                     autoComplete="address-level2"
                   />
@@ -117,7 +156,7 @@ const DeliveryAddressForm = () => {
                     required
                     id="state"
                     name="state"
-                    label="State/Province/Region"
+                    label="Tỉnh/Thành phố"
                     fullWidth
                     autoComplete="address-level1"
                   />
@@ -128,7 +167,7 @@ const DeliveryAddressForm = () => {
                     required
                     id="zip"
                     name="zip"
-                    label="Zip/Postal Code"
+                    label="Mã bưu điện"
                     fullWidth
                     autoComplete="postal-code"
                   />
@@ -139,20 +178,25 @@ const DeliveryAddressForm = () => {
                     required
                     id="phoneNumber"
                     name="phoneNumber"
-                    label="Phone Number"
+                    label="Số điện thoại"
                     fullWidth
                     autoComplete="tel"
                   />
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12}>
                   <Button
-                    sx={{ mt: 2, bgcolor: 'RGB(145 85 253)', '&:hover': { bgcolor: 'blue' } }}
+                    sx={{ 
+                      mt: 2, 
+                      bgcolor: 'RGB(145 85 253)', 
+                      '&:hover': { bgcolor: 'RGB(124 58 237)' },
+                      width: '100%'
+                    }}
                     size="large"
-                    type="submit" // Thêm type="submit" để form hoạt động
+                    type="submit"
                     variant="contained"
                   >
-                    Add
+                    Thêm địa chỉ mới
                   </Button>
                 </Grid>
               </Grid>

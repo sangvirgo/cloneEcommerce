@@ -4,7 +4,9 @@ import com.ecommerce.DTO.*;
 import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.model.*;
 import com.ecommerce.repository.UserRepository;
+import com.ecommerce.request.AddAddressRequest;
 import com.ecommerce.response.UserProfileResponse;
+import com.ecommerce.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +27,8 @@ public class UserController {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private UserService userService;
 
     @GetMapping("/profile")
     public ResponseEntity<?> getUserProfile() {
@@ -89,6 +91,62 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "An unexpected error occurred: " + e.getMessage(), "code", "INTERNAL_ERROR"));
         }
+    }
+
+
+
+    @GetMapping("/address")
+    public ResponseEntity<?> getUserAddress() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if(authentication == null || authentication.getName() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Authentication failed", "code", "AUTH_ERROR"));
+            }
+
+            String email = authentication.getName();
+            User user = userRepository.findByEmail(email);
+
+            if(user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "User not found for email: " + email, "code", "USER_NOT_FOUND"));
+            }
+
+            List<AddressDTO> addressDTOS = new ArrayList<>();
+
+            if(user.getAddress() != null) {
+                for (Address a: user.getAddress()) {
+                    addressDTOS.add(new AddressDTO(a));
+                }
+            }
+
+            return ResponseEntity.ok(addressDTOS);
+        } catch (Exception e) {
+            logger.error("Error getting user address: ", e);
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred: " + e.getMessage(), "code", "INTERNAL_ERROR"));
+        }
+    }
+
+
+    @PostMapping("/addresses")
+    public ResponseEntity<?> addUserAddress(@RequestHeader("Authorization") String jwt,
+                                            @RequestBody AddAddressRequest req) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Authentication failed", "code", "AUTH_ERROR"));
+        }
+        String email = authentication.getName();
+        User user= userRepository.findByEmail(email);
+        if(user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "User not found for email: " + jwt, "code", "USER_NOT_FOUND"));
+        }
+
+        userService.addUserAddress(user, req);
+        return ResponseEntity.ok(Map.of("message", "Address added successfully"));
     }
 
 
