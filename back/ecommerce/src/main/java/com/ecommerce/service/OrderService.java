@@ -10,7 +10,7 @@ import java.util.List;
 public interface OrderService {
     public Order findOrderById(Long orderId) throws GlobalExceptionHandler;
     public List<Order> userOrderHistory(Long userId) throws GlobalExceptionHandler;
-    public Order placeOrder(Address address, User user) throws GlobalExceptionHandler;
+    public Order placeOrder(Long addressId, User user) throws GlobalExceptionHandler;
     public Order confirmedOrder(Long orderId) throws GlobalExceptionHandler;
     public Order shippedOrder(Long orderId) throws GlobalExceptionHandler;
     public Order deliveredOrder(Long orderId) throws GlobalExceptionHandler;

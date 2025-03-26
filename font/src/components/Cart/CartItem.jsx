@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 import { useDispatch } from 'react-redux'
 import { removeItemToCart, updateItemToCart } from "../../State/Cart/Action";
 
-const CartItem = ({ item }) => {
+const CartItem = ({ item, isReview }) => {
     const dispatch = useDispatch();
   
     const handleIncreaseQuantity = () => {
@@ -57,21 +57,32 @@ const CartItem = ({ item }) => {
   
         <div className="lg:flex items-center lg:space-x-10 pt-4">
           <div className="flex items-center space-x-2">
-            <IconButton onClick={handleDecreaseQuantity} sx={{color: "red"}}>
+
+            {!isReview ? 
+              <IconButton onClick={handleDecreaseQuantity} sx={{color: "red"}}>
               <RemoveCircleOutlineIcon/>
-            </IconButton>
+            </IconButton> : null
+            }
+            
   
             <span className="py-1 px-7 border rounded-sm">{item.quantity}</span>
   
-            <IconButton onClick={handleIncreaseQuantity} sx={{color: "green"}}>
-              <AddCircleOutlineIcon/>
-            </IconButton>
+
+            {!isReview ?
+                <IconButton onClick={handleIncreaseQuantity} sx={{color: "green"}}>
+                <AddCircleOutlineIcon/>
+              </IconButton> : null
+            }
+
           </div>
   
           <div>
-            <Button onClick={handleRemoveItem} sx={{color: "red"}}>
-              Xóa
-            </Button>
+            {!isReview ?
+                <Button onClick={handleRemoveItem} sx={{color: "red"}}>
+                Xóa
+              </Button> : null
+            }
+
           </div>
         </div>
       </div>
@@ -90,6 +101,7 @@ CartItem.propTypes = {
     imageUrl: PropTypes.string.isRequired,
     discountPercent: PropTypes.number.isRequired
   }).isRequired,
+  isReview: PropTypes.bool
 };
 
 export default CartItem

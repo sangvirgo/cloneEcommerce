@@ -1,24 +1,35 @@
 import { useEffect, useState } from 'react';
-import { Button, Grid, TextField, Box, RadioGroup, Radio, FormControlLabel } from '@mui/material';
+import { Button, Grid, TextField, Box, RadioGroup, Radio, FormControlLabel} from '@mui/material';
 import AddressCard from './AddressCard';
 import "./Checkout.css"
 import { useDispatch, useSelector } from 'react-redux';
-import { addAddress, getAddress } from '../../State/Order/Action';
-import { useNavigate } from 'react-router-dom';
+import { addAddress, createOrder, getAddress } from '../../State/Order/Action';
 
 const DeliveryAddressForm = () => {
   const {address} = useSelector(store => store.order)
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
-    dispatch(getAddress())
+    dispatch(getAddress()).catch(err => {
+      console.error("Failed to fetch addresses:", err);
+    });
   }, [dispatch])
 
+  useEffect(() => {
+    if (address?.data?.length > 0 && !selectedAddressId) {
+      const firstAddressId = parseInt(address.data[0].id);
+      console.log("Setting default address ID:", firstAddressId);
+      setSelectedAddressId(firstAddressId);
+    }
+  }, [address, selectedAddressId]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage(null);
+    
     const data = new FormData(e.currentTarget);
     const newAddress = {
       firstName: data.get('firstName'),
@@ -28,32 +39,55 @@ const DeliveryAddressForm = () => {
       state: data.get('state'),
       zipCode: data.get('zip'),
       mobile: data.get('phoneNumber'),
-    };
-    console.log('Submitting new address:', newAddress);
-    dispatch(addAddress(newAddress));
+    };    
+    
+    try {
+      await dispatch(addAddress(newAddress));
+      // Reload địa chỉ sau khi thêm thành công
+      dispatch(getAddress());
+    } catch (error) {
+      console.error("Error adding address:", error);
+      setErrorMessage("Không thể thêm địa chỉ. Vui lòng thử lại.");
+    }
   };
 
   const handleAddressSelection = (event) => {
-    const selectedId = event.target.value;
-    console.log("Current addresses:", address.data?.find(a => a.id==selectedId));
-    console.log('Selected address ID:', selectedId);
+    const selectedId = parseInt(event.target.value);
+    console.log("Selected address ID:", selectedId);
+    console.log("Selected address:", address.data?.find(a => a.id === selectedId));
     setSelectedAddressId(selectedId);
   };
 
-  const handleDeliverHere = () => {
-    if (selectedAddressId) {
-      const selectedAddress = address?.data?.find(addr => addr.id == selectedAddressId);
-      if (selectedAddress) {
-        console.log('Proceeding with address:', selectedAddress);
-        navigate('/checkout?step=3');
-      }
-    } else {
-      alert('Vui lòng chọn địa chỉ giao hàng');
+  const handleDeliverHere = async () => {
+    if (!selectedAddressId) {
+      setErrorMessage('Vui lòng chọn địa chỉ giao hàng');
+      return;
+    }
+
+    try {
+      setIsCreatingOrder(true);
+      setErrorMessage(null);
+      console.log('Creating order with address ID:', selectedAddressId);
+      const selectedAddress = address.data?.find(a => a.id === selectedAddressId);
+      console.log('Selected address details for order:', selectedAddress);
+      
+      await dispatch(createOrder(selectedAddressId));
+    } catch (error) {
+      console.error("Error creating order:", error);
+      setErrorMessage("Không thể tạo đơn hàng. Vui lòng thử lại.");
+    } finally {
+      setIsCreatingOrder(false);
     }
   };
 
   return (
     <div>
+      {errorMessage && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {errorMessage}
+        </div>
+      )}
+      
       <Grid container spacing={4}>
         {/* Saved Addresses Column */}
         <Grid item xs={12} lg={5} className="summary rounded-md shadow-md h-[55.5vh] overflow-y-scroll">
@@ -66,12 +100,12 @@ const DeliveryAddressForm = () => {
                 {address.data.map((item) => (
                   <FormControlLabel
                     key={item.id}
-                    value={item.id}
+                    value={Number(item.id)}
                     control={<Radio />}
                     label={
                       <AddressCard 
                         address={item} 
-                        isSelected={selectedAddressId === item.id}
+                        isSelected={selectedAddressId === Number(item.id)}
                       />
                     }
                   />
@@ -93,9 +127,9 @@ const DeliveryAddressForm = () => {
               }}
               size="large"
               variant="contained"
-              // disabled={!selectedAddressId}
+              disabled={!selectedAddressId || isCreatingOrder}
             >
-              Delivery Here
+              {isCreatingOrder ? "Đang xử lý..." : "Giao hàng đến địa chỉ này"}
             </Button>
           </div>
         </Grid>

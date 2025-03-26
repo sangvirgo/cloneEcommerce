@@ -5,8 +5,9 @@ import { useNavigate } from "react-router-dom"
 import { useDispatch, useSelector } from "react-redux"
 import { useEffect } from "react"
 import { getCart } from "../../State/Cart/Action"
+import PropTypes from 'prop-types';
 
-const Cart = () => {
+const Cart = ({isReview=false}) => {
     const navigate=useNavigate()
     const dispatch = useDispatch()
     const {cart, loading, error} = useSelector(store => store.cart)
@@ -38,7 +39,7 @@ const Cart = () => {
                     <div className="col-span-2">
                         {cart && cart.cartItems && cart.cartItems.length > 0 ? (
                             cart.cartItems.map((item) => (
-                                <CartItem key={item.id} item={item} />
+                                <CartItem key={item.id} item={item} isReview={isReview} />
                             ))
                         ) : (
                             <div className="text-center py-10">
@@ -101,4 +102,8 @@ const Cart = () => {
     )
 }
 
-export default Cart
+Cart.propTypes = {
+    isReview: PropTypes.bool
+};
+
+export default Cart 

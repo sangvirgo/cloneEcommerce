@@ -1,36 +1,68 @@
 import { ADD_ADDRESS_FAILURE, ADD_ADDRESS_REQUEST, ADD_ADDRESS_SUCCESS, CREATE_ORDER_FAILURE, CREATE_ORDER_REQUEST, CREATE_ORDER_SUCCESS, GET_ADDRESS_FAILURE, GET_ADDRESS_REQUEST, GET_ADDRESS_SUCCESS, GET_ORDER_BY_ID_FAILURE, GET_ORDER_BY_ID_REQUEST, GET_ORDER_BY_ID_SUCCESS } from "./ActionType";
-import {api} from '../../config/ApiConfig'
+import { api } from '../../config/ApiConfig'
 
-export const createOrder= (reqData) => async (dispatch) => {
-    console.log("Requesting to create order", reqData);
+export const createOrder = (addressId) => async (dispatch) => {
     dispatch({ type: CREATE_ORDER_REQUEST });
 
     try {
-        const data = await api.post("/api/orders/", reqData.address);
-        if (data.id) {
-            reqData.navigate({search: `step=3&order_id=${data.id}`});
+        
+        // Kiểm tra addressId
+        if (!addressId) {
+            throw new Error("Địa chỉ không hợp lệ");
         }
 
-        dispatch({ type: CREATE_ORDER_SUCCESS, payload: data});
+        // Gọi API với empty body
+        const { data } = await api.post(`/api/order/create/${addressId}`);
+
+        dispatch({ type: CREATE_ORDER_SUCCESS, payload: data });
+
+        // Chuyển hướng nếu có orderId
+        if (data && data.id) {
+            console.log("Redirecting to order summary, orderId:", data.id);
+            window.location.href = `/checkout?step=3&orderId=${data.id}`;
+        } else {
+            console.error("Order created but no ID returned:", data);
+        }
+
+        return data;
     } catch (error) {
-        dispatch({ 
-            type: CREATE_ORDER_FAILURE, 
-            payload: error.message,
+        console.error("Order creation error details:", {
+            error: error,
+            response: error.response,
+            data: error.response?.data
         });
+
+        let errorMessage;
+        if (error.response?.data?.error) {
+            errorMessage = error.response.data.error;
+        } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+        } else if (error.message) {
+            errorMessage = error.message;
+        } else {
+            errorMessage = "Không thể tạo đơn hàng";
+        }
+
+        dispatch({
+            type: CREATE_ORDER_FAILURE,
+            payload: errorMessage,
+        });
+        
+        throw error;
     }
 }
 
-
-export const getOrderById= (orderId) => async (dispatch) => {
+export const getOrderById = (orderId) => async (dispatch) => {
     dispatch({ type: GET_ORDER_BY_ID_REQUEST });
 
     try {
         const data = await api.get(`/api/orders/${orderId}`);
+        console.log("Order data: ", data);
 
-        dispatch({ type: GET_ORDER_BY_ID_SUCCESS, payload: data});
+        dispatch({ type: GET_ORDER_BY_ID_SUCCESS, payload: data });
     } catch (error) {
-        dispatch({ 
-            type: GET_ORDER_BY_ID_FAILURE, 
+        dispatch({
+            type: GET_ORDER_BY_ID_FAILURE,
             payload: error.message,
         });
     }
@@ -45,15 +77,15 @@ export const getAddress = () => async (dispatch) => {
         console.log("Address data", data);
     } catch (error) {
         const errorMessage = error.response?.data?.message || "Không thể lấy địa chỉ";
-        dispatch({ 
-            type: GET_ADDRESS_FAILURE, 
+        dispatch({
+            type: GET_ADDRESS_FAILURE,
             payload: errorMessage,
         });
     }
 }
 
 export const addAddress = (reqData) => async (dispatch) => {
-    dispatch({ type: ADD_ADDRESS_REQUEST});
+    dispatch({ type: ADD_ADDRESS_REQUEST });
 
     try {
         const addressData = {
@@ -70,9 +102,9 @@ export const addAddress = (reqData) => async (dispatch) => {
         dispatch({ type: ADD_ADDRESS_SUCCESS, payload: data });
     } catch (error) {
         const errorMessage = error.response?.data?.message || "Không thể thêm địa chỉ";
-        dispatch({ 
-            type: ADD_ADDRESS_FAILURE, 
+        dispatch({
+            type: ADD_ADDRESS_FAILURE,
             payload: errorMessage,
         });
-    }   
+    }
 }

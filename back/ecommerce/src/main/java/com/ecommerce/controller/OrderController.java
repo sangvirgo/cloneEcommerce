@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/order")
@@ -22,12 +23,32 @@ public class OrderController {
     @Autowired
     private UserService userService;
 
-    @PostMapping("/")
-    public ResponseEntity<OrderDTO> createOrder(@RequestHeader("Authorization") String jwt, @Valid @RequestBody Address address) throws GlobalExceptionHandler {
-        User user = userService.findUserByJwt(jwt);
-        Order order = orderService.placeOrder(address, user);
-        OrderDTO orderDTO = new OrderDTO(order);
-        return new ResponseEntity<>(orderDTO, HttpStatus.CREATED);
+    @PostMapping("/create/{addressId}")
+    public ResponseEntity<?> createOrder(@RequestHeader("Authorization") String jwt,
+                                         @PathVariable("addressId") Long addressId) {
+        try {
+            User user = userService.findUserByJwt(jwt);
+
+            // Validate if address exists for this user
+            boolean addressExists = user.getAddress().stream()
+                    .anyMatch(address -> address.getId().equals(addressId));
+
+            if (!addressExists) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Address not found", "code", "ADDRESS_NOT_FOUND"));
+            }
+
+            Order order = orderService.placeOrder(addressId, user);
+            OrderDTO orderDTO = new OrderDTO(order);
+            return ResponseEntity.status(HttpStatus.CREATED).body(orderDTO);
+
+        } catch (GlobalExceptionHandler e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage(), "code", e.getCode()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred", "code", "INTERNAL_ERROR"));
+        }
     }
 
     @GetMapping("/user")
@@ -42,8 +63,9 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Order> findOrderById(@PathVariable("id") Long orderId) throws GlobalExceptionHandler {
+    public ResponseEntity<OrderDTO> findOrderById(@PathVariable("id") Long orderId) throws GlobalExceptionHandler {
         Order order = orderService.findOrderById(orderId);
-        return new ResponseEntity<>(order, HttpStatus.OK);
+        OrderDTO orderDTO = new OrderDTO(order);
+        return new ResponseEntity<>(orderDTO, HttpStatus.OK);
     }
 }

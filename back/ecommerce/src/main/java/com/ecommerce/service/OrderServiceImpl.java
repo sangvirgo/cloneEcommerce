@@ -45,11 +45,15 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public Order placeOrder(Address address, User user) throws GlobalExceptionHandler {
+    public Order placeOrder(Long addressId, User user) throws GlobalExceptionHandler {
         Cart cart = cartRepository.findByUserId(user.getId());
         if (cart == null || cart.getCartItems().isEmpty()) {
             throw new GlobalExceptionHandler("Giỏ hàng trống", "ORDER_ERROR");
         }
+        Address address= user.getAddress().stream()
+                .filter(a -> a.getId()==addressId)
+                .findFirst()
+                .orElseThrow(() -> new GlobalExceptionHandler("Not found address", "ADDRESS_NOT_FOUND"));
 
         // Tính toán lại tổng giá trị giỏ hàng
         cart = cartService.findUserCart(user.getId());

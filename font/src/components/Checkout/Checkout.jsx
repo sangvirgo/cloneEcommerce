@@ -16,6 +16,7 @@ export default function Checkout() {
   const navigate = useNavigate();
   const querySearch = new URLSearchParams(location.search);
   const stepFromUrl = querySearch.get("step");
+  const orderId = querySearch.get("orderId");
 
   // Đảm bảo step nằm trong khoảng hợp lệ (0 đến steps.length - 1)
   const initialStep = stepFromUrl 
@@ -26,8 +27,23 @@ export default function Checkout() {
 
   // Cập nhật URL khi activeStep thay đổi
   React.useEffect(() => {
-    navigate(`/checkout/?step=${activeStep + 1}`, { replace: true });
-  }, [activeStep, navigate]);
+    // Giữ lại orderId nếu có khi thay đổi step
+    const newParams = new URLSearchParams();
+    newParams.set("step", activeStep + 1);
+    
+    // Chỉ thêm orderId vào URL nếu nó tồn tại
+    if (orderId) {
+      newParams.set("orderId", orderId);
+    }
+    
+    // Lấy orderId từ query hiện tại nếu step là 3 (Order Summary)
+    const currentOrderId = querySearch.get("orderId");
+    if (activeStep === 2 && currentOrderId) {
+      newParams.set("orderId", currentOrderId);
+    }
+    
+    navigate(`/checkout?${newParams.toString()}`, { replace: true });
+  }, [activeStep, navigate, orderId, querySearch]);
 
   const handleNext = () => {
     setActiveStep((prevActiveStep) => Math.min(prevActiveStep + 1, steps.length - 1));
@@ -36,6 +52,14 @@ export default function Checkout() {
   const handleBack = () => {
     setActiveStep((prevActiveStep) => Math.max(prevActiveStep - 1, 0));
   };
+
+  // Kiểm tra nếu đang ở bước Order Summary nhưng không có orderId thì quay lại bước trước
+  React.useEffect(() => {
+    if (activeStep === 2 && !querySearch.get("orderId")) {
+      console.log("No order ID found for Order Summary, returning to previous step");
+      setActiveStep(1);
+    }
+  }, [activeStep, querySearch]);
 
   return (
     <div className='px-10 lg:px-20'>
@@ -75,7 +99,7 @@ export default function Checkout() {
             </Box>
 
             <div className='mt-10'>
-              {activeStep ==1 ? <DeliveryAddressForm/> : <OrderSummary/>}
+              {activeStep === 1 ? <DeliveryAddressForm/> : <OrderSummary/>}
             </div>
           </React.Fragment>
         )}
