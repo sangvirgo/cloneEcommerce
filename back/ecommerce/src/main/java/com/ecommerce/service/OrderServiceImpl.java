@@ -6,11 +6,15 @@ import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.model.*;
 import com.ecommerce.repository.CartRepository;
 import com.ecommerce.repository.OrderRepository;
+import com.ecommerce.repository.AddressRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -19,6 +23,9 @@ public class OrderServiceImpl implements OrderService {
     private CartService cartService;
     private ProductService productService;
     private OrderRepository orderRepository;
+    
+    @Autowired
+    private AddressRepository addressRepository;
 
     public OrderServiceImpl(CartRepository cartRepository, CartService cartService, 
                           ProductService productService, OrderRepository orderRepository) {
@@ -46,47 +53,70 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public Order placeOrder(Long addressId, User user) throws GlobalExceptionHandler {
-        Cart cart = cartRepository.findByUserId(user.getId());
-        if (cart == null || cart.getCartItems().isEmpty()) {
-            throw new GlobalExceptionHandler("Giỏ hàng trống", "ORDER_ERROR");
-        }
-        Address address= user.getAddress().stream()
-                .filter(a -> a.getId()==addressId)
-                .findFirst()
-                .orElseThrow(() -> new GlobalExceptionHandler("Not found address", "ADDRESS_NOT_FOUND"));
-
-        // Tính toán lại tổng giá trị giỏ hàng
-        cart = cartService.findUserCart(user.getId());
-
-        Order order = new Order();
-        order.setUser(user);
-        order.setOrderDate(LocalDateTime.now());
-
-        // Thiết lập user cho address trước khi gán vào order
-        address.setUser(user); // Thêm dòng này
-        order.setShippingAddress(address);
-
-        order.setOrderStatus(OrderStatus.PENDING);
-        order.setTotalAmount(cart.getTotalAmount());
-        order.setTotalItems(cart.getTotalItems());
-        order.setPaymentStatus(PaymentStatus.PENDING);
-        order.setDiscount(cart.getDiscount());
-
-        // Cập nhật số lượng sản phẩm
-        for (CartItem item : cart.getCartItems()) {
-            Product product = item.getProduct();
-            if (product.getQuantity() < item.getQuantity()) {
-                throw new GlobalExceptionHandler("Sản phẩm " + product.getTitle() + " không đủ số lượng trong kho", "ORDER_ERROR");
+        try {
+            Cart cart = cartRepository.findByUserId(user.getId());
+            if (cart == null || cart.getCartItems().isEmpty()) {
+                throw new GlobalExceptionHandler("Giỏ hàng trống", "ORDER_ERROR");
             }
-            product.setQuantity(product.getQuantity() - item.getQuantity());
-            productService.updateProduct(product.getId(), product);
+            Address originalAddress = user.getAddress().stream()
+                    .filter(a -> a.getId()==addressId)
+                    .findFirst()
+                    .orElseThrow(() -> new GlobalExceptionHandler("Not found address", "ADDRESS_NOT_FOUND"));
+
+            // Tính toán lại tổng giá trị giỏ hàng
+            cart = cartService.findUserCart(user.getId());
+
+            Order order = new Order();
+            order.setUser(user);
+            order.setOrderDate(LocalDateTime.now());
+
+            // Tạo một bản sao HOÀN TOÀN MỚI của địa chỉ để tránh lỗi unique constraint
+            Address shippingAddress = new Address();
+            shippingAddress.setFirstName(originalAddress.getFirstName());
+            shippingAddress.setLastName(originalAddress.getLastName());
+            shippingAddress.setStreetAddress(originalAddress.getStreetAddress());
+            shippingAddress.setCity(originalAddress.getCity());
+            shippingAddress.setState(originalAddress.getState());
+            shippingAddress.setZipCode(originalAddress.getZipCode());
+            shippingAddress.setMobile(originalAddress.getMobile());
+            shippingAddress.setUser(user);
+            
+            // Thêm một giá trị ngẫu nhiên cho đảm bảo tính duy nhất
+            String uniqueSuffix = "-" + UUID.randomUUID().toString().substring(0, 8);
+            shippingAddress.setStreetAddress(originalAddress.getStreetAddress() + uniqueSuffix);
+            
+            // Lưu địa chỉ mới vào cơ sở dữ liệu để có ID riêng
+            Address savedAddress = addressRepository.save(shippingAddress);
+            
+            // Sử dụng địa chỉ đã lưu cho đơn hàng
+            order.setShippingAddress(savedAddress);
+            order.setOrderStatus(OrderStatus.PENDING);
+            order.setTotalAmount(cart.getTotalAmount());
+            order.setTotalItems(cart.getTotalItems());
+            order.setPaymentStatus(PaymentStatus.PENDING);
+            order.setDiscount(cart.getDiscount());
+
+            // Cập nhật số lượng sản phẩm
+            for (CartItem item : cart.getCartItems()) {
+                Product product = item.getProduct();
+                if (product.getQuantity() < item.getQuantity()) {
+                    throw new GlobalExceptionHandler("Sản phẩm " + product.getTitle() + " không đủ số lượng trong kho", "ORDER_ERROR");
+                }
+                product.setQuantity(product.getQuantity() - item.getQuantity());
+                productService.updateProduct(product.getId(), product);
+            }
+
+            // Xóa giỏ hàng
+            cart.getCartItems().clear();
+            cartRepository.save(cart);
+
+            return orderRepository.save(order);
+        } catch (Exception e) {
+            if (e instanceof GlobalExceptionHandler) {
+                throw e;
+            }
+            throw new GlobalExceptionHandler("Lỗi khi tạo đơn hàng: " + e.getMessage(), "ORDER_ERROR");
         }
-
-        // Xóa giỏ hàng
-        cart.getCartItems().clear();
-        cartRepository.save(cart);
-
-        return orderRepository.save(order);
     }
 
     @Override

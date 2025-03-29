@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Entity
 @Table(name = "address")
@@ -56,8 +58,9 @@ public class Address {
     @Column(name = "mobile")
     private String mobile;
 
-    @OneToOne(mappedBy = "shippingAddress", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Order order;
+    @OneToMany(mappedBy = "shippingAddress")
+    @JsonIgnore
+    private List<Order> orders;
 
     public Address() {
     }

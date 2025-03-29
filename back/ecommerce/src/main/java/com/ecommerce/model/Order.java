@@ -35,9 +35,11 @@ public class Order {
     @Column(name = "total_amount")
     private int totalAmount;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToOne
     @JoinColumn(name = "shipping_address_id")
     private Address shippingAddress;
+
+
 
     @Column(name = "delivery_date")
     private LocalDateTime deliveryDate;
