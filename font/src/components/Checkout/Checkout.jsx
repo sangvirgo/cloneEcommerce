@@ -41,6 +41,15 @@ export default function Checkout() {
     if (activeStep === 2 && currentOrderId) {
       newParams.set("orderId", currentOrderId);
     }
+
+    if (activeStep === 3 && orderId) {
+      window.location.replace(`http://localhost:5173/payment/process/${orderId}`);
+    } else if (activeStep === 3 && !orderId) {
+      // Xử lý trường hợp không có orderId, ví dụ: hiển thị thông báo lỗi
+      console.error("OrderId is missing for payment processing");
+      // Hoặc chuyển hướng về bước trước đó
+      setActiveStep(1);
+    }
     
     navigate(`/checkout?${newParams.toString()}`, { replace: true });
   }, [activeStep, navigate, orderId, querySearch]);

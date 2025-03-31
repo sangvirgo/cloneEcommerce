@@ -36,10 +36,8 @@ public class Order {
     private int totalAmount;
 
     @ManyToOne
-    @JoinColumn(name = "shipping_address_id")
+    @JoinColumn(name = "shipping_address_id", unique = false)
     private Address shippingAddress;
-
-
 
     @Column(name = "delivery_date")
     private LocalDateTime deliveryDate;

@@ -10,6 +10,7 @@ import com.ecommerce.repository.CartItemRepository;
 import com.ecommerce.request.AddItemRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,6 +28,9 @@ public class CartServiceImpl implements CartService {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private CartItemService cartItemService;
 
     @Override
     public Cart createCart(User user) {
@@ -118,15 +122,23 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional  // Thêm annotation này
     public void clearCart(Long userId) throws GlobalExceptionHandler {
         Cart cart = findUserCart(userId);
-        cartItemRepository.deleteAll(cart.getCartItems());
+
+        // Xóa các mục từ bảng cart_items trước
+        cartItemService.deleteAllCartItems(cart.getId(), userId);
+
+        // Cập nhật đối tượng cart
         cart.getCartItems().clear();
-        
-        updateCartTotals(cart);
+        cart.setTotalItems(0);
+        cart.setTotalPrice(0);
+        cart.setTotalDiscountedPrice(0);
+        cart.setDiscount(0);
+
+        // Lưu giỏ hàng đã được cập nhật
         cartRepository.save(cart);
     }
-
     private void updateCartTotals(Cart cart) {
         List<CartItem> items = cart.getCartItems();
         

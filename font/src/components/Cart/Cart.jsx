@@ -7,7 +7,7 @@ import { useEffect } from "react"
 import { getCart } from "../../State/Cart/Action"
 import PropTypes from 'prop-types';
 
-const Cart = ({isReview=false}) => {
+const Cart = ({isReview=false, orderId}) => {
     const navigate=useNavigate()
     const dispatch = useDispatch()
     const {cart, loading, error} = useSelector(store => store.cart)
@@ -15,7 +15,11 @@ const Cart = ({isReview=false}) => {
     
     const handleCheckout = () => {
         console.log('Navigating to checkout with step=2');
-        navigate('/checkout?step=2');
+        if(isReview) {
+            window.location.replace(`http://localhost:5173/payment/process/${orderId}`);
+        } else {
+            navigate('/checkout?step=2');
+        }
     };
     
     useEffect(() => {
@@ -103,7 +107,8 @@ const Cart = ({isReview=false}) => {
 }
 
 Cart.propTypes = {
-    isReview: PropTypes.bool
+    isReview: PropTypes.bool,
+    orderId: PropTypes.string,  
 };
 
 export default Cart 

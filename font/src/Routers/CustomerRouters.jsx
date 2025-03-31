@@ -9,6 +9,9 @@ import Checkout from "../components/Checkout/Checkout"
 import Order from "../components/Order/Order"
 import OrderDetail from "../components/Order/OrderDetail"
 import OAuthRedirect from "../components/auth/OAuthRedirect"
+import PaymentOrderDetail from "../components/Payment/PaymentOrderDetail"
+import PaymentForm from "../components/Payment/PaymentForm"
+import PaymentResult from "../components/Payment/PaymentResult"
 
 
 const CustomerRouters = () => {
@@ -30,7 +33,9 @@ const CustomerRouters = () => {
             <Route path="/account/order" element={<Order/>} />
             <Route path="/checkout/order/:orderId" element={<OrderDetail/>} />
             <Route path="/oauth2/redirect" element={<OAuthRedirect />} />
-
+            <Route path="/payment/detail/:orderId" element={<PaymentOrderDetail />} />
+            <Route path="/payment/process/:orderId" element={<PaymentForm />} />
+            <Route path="/payment/result" element={<PaymentResult />} />
         </Routes>
 
         <div>

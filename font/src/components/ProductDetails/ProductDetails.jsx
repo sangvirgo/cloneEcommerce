@@ -125,6 +125,7 @@ import { addItemToCart } from '../../State/Cart/Action'
       console.log("Item to cart: ", data);
       dispatch(addItemToCart(data));
       navigate('/cart')
+      window.location.reload();
     }
 
     useEffect(() => {

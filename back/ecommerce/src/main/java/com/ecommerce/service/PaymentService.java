@@ -3,9 +3,10 @@ package com.ecommerce.service;
 import com.ecommerce.exception.GlobalExceptionHandler;
 import com.ecommerce.model.PaymentDetail;
 
+import java.util.Map;
+
 public interface PaymentService {
-    PaymentDetail createPayment(PaymentDetail paymentDetail) throws GlobalExceptionHandler;
+    String createPayment(Long orderId) throws GlobalExceptionHandler;
     PaymentDetail getPaymentById(Long paymentId) throws GlobalExceptionHandler;
-    PaymentDetail updatePayment(Long paymentId, PaymentDetail paymentDetail) throws GlobalExceptionHandler;
-    void deletePayment(Long paymentId) throws GlobalExceptionHandler;
+    PaymentDetail processPaymentCallback(Map<String, String> vnpParams) throws GlobalExceptionHandler;
 } 

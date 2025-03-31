@@ -12,9 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import java.util.Objects;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -23,16 +22,15 @@ public class OrderServiceImpl implements OrderService {
     private CartService cartService;
     private ProductService productService;
     private OrderRepository orderRepository;
-    
-    @Autowired
     private AddressRepository addressRepository;
 
     public OrderServiceImpl(CartRepository cartRepository, CartService cartService, 
-                          ProductService productService, OrderRepository orderRepository) {
+                          ProductService productService, OrderRepository orderRepository, AddressRepository addressRepository) {
         this.cartRepository = cartRepository;
         this.cartService = cartService;
         this.productService = productService;
         this.orderRepository = orderRepository;
+        this.addressRepository = addressRepository;
     }
 
     @Override
@@ -58,10 +56,12 @@ public class OrderServiceImpl implements OrderService {
             if (cart == null || cart.getCartItems().isEmpty()) {
                 throw new GlobalExceptionHandler("Giỏ hàng trống", "ORDER_ERROR");
             }
-            Address originalAddress = user.getAddress().stream()
-                    .filter(a -> a.getId()==addressId)
+
+            // Tìm địa chỉ gốc
+            Address address = user.getAddress().stream()
+                    .filter(a -> Objects.equals(a.getId(), addressId))
                     .findFirst()
-                    .orElseThrow(() -> new GlobalExceptionHandler("Not found address", "ADDRESS_NOT_FOUND"));
+                    .orElseThrow(() -> new GlobalExceptionHandler("Không tìm thấy địa chỉ", "ADDRESS_NOT_FOUND"));
 
             // Tính toán lại tổng giá trị giỏ hàng
             cart = cartService.findUserCart(user.getId());
@@ -70,26 +70,8 @@ public class OrderServiceImpl implements OrderService {
             order.setUser(user);
             order.setOrderDate(LocalDateTime.now());
 
-            // Tạo một bản sao HOÀN TOÀN MỚI của địa chỉ để tránh lỗi unique constraint
-            Address shippingAddress = new Address();
-            shippingAddress.setFirstName(originalAddress.getFirstName());
-            shippingAddress.setLastName(originalAddress.getLastName());
-            shippingAddress.setStreetAddress(originalAddress.getStreetAddress());
-            shippingAddress.setCity(originalAddress.getCity());
-            shippingAddress.setState(originalAddress.getState());
-            shippingAddress.setZipCode(originalAddress.getZipCode());
-            shippingAddress.setMobile(originalAddress.getMobile());
-            shippingAddress.setUser(user);
-            
-            // Thêm một giá trị ngẫu nhiên cho đảm bảo tính duy nhất
-            String uniqueSuffix = "-" + UUID.randomUUID().toString().substring(0, 8);
-            shippingAddress.setStreetAddress(originalAddress.getStreetAddress() + uniqueSuffix);
-            
-            // Lưu địa chỉ mới vào cơ sở dữ liệu để có ID riêng
-            Address savedAddress = addressRepository.save(shippingAddress);
-            
-            // Sử dụng địa chỉ đã lưu cho đơn hàng
-            order.setShippingAddress(savedAddress);
+            // Sử dụng trực tiếp địa chỉ đã tồn tại
+            order.setShippingAddress(address);
             order.setOrderStatus(OrderStatus.PENDING);
             order.setTotalAmount(cart.getTotalAmount());
             order.setTotalItems(cart.getTotalItems());
@@ -106,9 +88,9 @@ public class OrderServiceImpl implements OrderService {
                 productService.updateProduct(product.getId(), product);
             }
 
-            // Xóa giỏ hàng
-            cart.getCartItems().clear();
-            cartRepository.save(cart);
+            // // Xóa giỏ hàng
+            // cart.getCartItems().clear();
+            // cartRepository.save(cart);
 
             return orderRepository.save(order);
         } catch (Exception e) {

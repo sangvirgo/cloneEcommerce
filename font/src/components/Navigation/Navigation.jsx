@@ -25,6 +25,7 @@ import { Avatar, Button, Menu, MenuItem } from '@mui/material';
 import AuthModal from '../auth/AuthModal';
 import { deepPurple } from '@mui/material/colors';
 import { getUser, logout } from '../../State/Auth/Action';
+import { getCart } from '../../State/Cart/Action';
 
 const navigation = {
   categories: [
@@ -158,13 +159,16 @@ export default function Navigation() {
   const dispatch = useDispatch();
   const location = useLocation();
   const jwt = localStorage.getItem('jwt');
+  const {cart} = useSelector(store => store.cart);
 
+
+    
+
+  // Listen for cart update events
   useEffect(() => {
-    if(jwt) {
-      console.log('Navigation - JWT found in localStorage:', jwt);
-      dispatch(getUser(jwt))
-    }
-  }, [jwt, dispatch])
+    dispatch(getCart())
+  }, [dispatch]);
+
 
   useEffect(() => {
     const token = localStorage.getItem('jwt');
@@ -175,13 +179,13 @@ export default function Navigation() {
   }, [dispatch]);
 
   useEffect(() => {
-    if(auth.user) {
+    if(auth.user && open) {
       console.log('Navigation - User loaded:', auth.user);
       handleClose()
     }
-  }, [auth.user])
+  }, [auth.user, open])
 
-  console.log("Auth state in Navigation:", auth);
+  // console.log("Auth state in Navigation:", auth);
 
   const handleUserClick = (e) => {
     setAnchorEl(e.currentTarget);
@@ -530,12 +534,12 @@ export default function Navigation() {
                     {/* Cart */}
                     <div className="ml-4 flow-root lg:ml-6">
                       <a href="#" className="group -m-2 flex items-center p-2">
-                        <Button onClick={()=>navigate("/account/order")} className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
+                        <Button onClick={()=>navigate("/cart")} className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
                         <ShoppingBagIcon
                           aria-hidden="true"
                           className="size-6 shrink-0 text-gray-400 group-hover:text-gray-500"
                         />
-                          <p className='ml-2'>0</p>
+                          <p className='ml-2'>5</p>
                         </Button>
                         <span className="sr-only">items in cart, view bag</span>
                       </a>
@@ -554,12 +558,12 @@ export default function Navigation() {
                     {/* Cart */}
                     <div className="flow-root">
                       <a href="#" className="group -m-2 flex items-center p-2">
-                        <Button onClick={()=>navigate("/account/order")} className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
+                        <Button onClick={()=>navigate("/cart")} className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
                         <ShoppingBagIcon
                           aria-hidden="true"
                           className="size-6 shrink-0 text-gray-400 group-hover:text-gray-500"
                         />
-                          <p className='ml-2'>0</p>
+                          <p className='ml-2'>{cart?.totalItems}</p>
                         </Button>
                       </a>
                     </div>
