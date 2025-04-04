@@ -22,8 +22,8 @@ const PaymentSuccess = () => {
             setIsLoading(true);
 
             try {
-                const {data} = await api.get('/api/cart/');
-                console.log('data', data)
+                const {data} = await api.get('/api/order/user');
+                console.log('data of order: ', data)
                 setOrderDetails(data);
                 setError(false);
             } catch (e) {
@@ -73,7 +73,7 @@ const PaymentSuccess = () => {
         <OrderTracker activeStep={1}/>
 
         {
-            orderDetails?.cartItems.map((item, index) => (
+            orderDetails?.[0]?.orderItems?.map((item, index) => (
                 <div key={index} className="my-4">
                     <CartItem item={item} key={index} isReview={true} />
                 </div>

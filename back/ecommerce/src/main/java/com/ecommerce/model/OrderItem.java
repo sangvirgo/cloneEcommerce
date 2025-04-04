@@ -38,6 +38,9 @@ public class OrderItem {
     @Column(name = "delivery_date")
     private LocalDateTime deliveryDate;
 
+    @Column(name = "discount_percent")
+    private Integer discountPercent;
+
     // Helper method to get user through order
     public User getUser() {
         return order != null ? order.getUser() : null;

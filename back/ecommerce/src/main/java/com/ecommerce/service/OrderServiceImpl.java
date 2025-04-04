@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -77,21 +78,45 @@ public class OrderServiceImpl implements OrderService {
             order.setTotalItems(cart.getTotalItems());
             order.setPaymentStatus(PaymentStatus.PENDING);
             order.setDiscount(cart.getDiscount());
+            order.setTotalDiscountedPrice(cart.getTotalDiscountedPrice());
 
-            // Cập nhật số lượng sản phẩm
-            for (CartItem item : cart.getCartItems()) {
-                Product product = item.getProduct();
-                if (product.getQuantity() < item.getQuantity()) {
+            // Lưu order trước để có ID
+            order = orderRepository.save(order);
+
+            // Tạo danh sách OrderItem từ CartItem
+            List<OrderItem> orderItems = new ArrayList<>();
+
+            for (CartItem cartItem : cart.getCartItems()) {
+                OrderItem orderItem = new OrderItem();
+                orderItem.setOrder(order);
+                orderItem.setProduct(cartItem.getProduct());
+                orderItem.setQuantity(cartItem.getQuantity());
+                orderItem.setPrice(cartItem.getPrice());
+                orderItem.setSize(cartItem.getSize());
+                orderItem.setDiscountPercent(cartItem.getDiscountPercent());
+                orderItem.setDiscountedPrice(cartItem.getDiscountedPrice());
+                // Dự kiến thời gian giao hàng là 7 ngày sau
+                orderItem.setDeliveryDate(LocalDateTime.now().plusDays(7));
+
+                orderItems.add(orderItem);
+
+                // Cập nhật số lượng sản phẩm trong kho
+                Product product = cartItem.getProduct();
+                if (product.getQuantity() < cartItem.getQuantity()) {
                     throw new GlobalExceptionHandler("Sản phẩm " + product.getTitle() + " không đủ số lượng trong kho", "ORDER_ERROR");
                 }
-                product.setQuantity(product.getQuantity() - item.getQuantity());
+                product.setQuantity(product.getQuantity() - cartItem.getQuantity());
                 productService.updateProduct(product.getId(), product);
             }
 
-            // // Xóa giỏ hàng
-            // cart.getCartItems().clear();
-            // cartRepository.save(cart);
+            // Thêm danh sách OrderItem vào Order
+            order.setOrderItems(orderItems);
 
+            // Xóa giỏ hàng sau khi đặt hàng thành công
+            cart.getCartItems().clear();
+            cartRepository.save(cart);
+
+            // Lưu lại order với đầy đủ thông tin orderItems
             return orderRepository.save(order);
         } catch (Exception e) {
             if (e instanceof GlobalExceptionHandler) {

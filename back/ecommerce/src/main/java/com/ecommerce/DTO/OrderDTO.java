@@ -6,6 +6,8 @@ import com.ecommerce.model.Order;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 public class OrderDTO {
@@ -19,6 +21,7 @@ public class OrderDTO {
     private LocalDateTime deliveryDate;
     private AddressDTO shippingAddress;
     private PaymentStatus paymentStatus;
+    private List<OrderItemDTO> orderItems;
 
     public OrderDTO(Order order) {
         this.id = order.getId();
@@ -31,5 +34,7 @@ public class OrderDTO {
         this.deliveryDate = order.getDeliveryDate();
         this.shippingAddress = new AddressDTO(order.getShippingAddress());
         this.paymentStatus = order.getPaymentStatus();
+        this.orderItems = new ArrayList<>();
+        order.getOrderItems().forEach(item -> this.orderItems.add(new OrderItemDTO(item)));
     }
 }

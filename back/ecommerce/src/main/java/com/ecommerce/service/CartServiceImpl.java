@@ -80,6 +80,7 @@ public class CartServiceImpl implements CartService {
             newItem.setPrice(product.getPrice());
             newItem.setDiscountedPrice(product.getDiscountedPrice());
             cart.getCartItems().add(newItem);
+            newItem.setDiscountPercent(product.getDiscountPersent());
             cartItemRepository.save(newItem);
         }
         

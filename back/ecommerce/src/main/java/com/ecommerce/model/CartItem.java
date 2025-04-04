@@ -38,6 +38,9 @@ public class CartItem {
     @Column(name = "discounted_price")
     private int discountedPrice;
 
+    @Column(name = "discount_percent")
+    private int discountPercent;
+
     public CartItem() {
     }
 
